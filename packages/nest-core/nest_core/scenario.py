@@ -40,6 +40,7 @@ class AgentConfig(BaseModel):
 
     count: int = 10
     brain: str = "state-machine"
+    llm_model: str = "gpt-4o-mini"
     roles: list[RoleConfig] = Field(default_factory=lambda: list[RoleConfig]())
 
 

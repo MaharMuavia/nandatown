@@ -82,36 +82,42 @@ class _SimAgentContext:
     async def send(self, to: AgentId, payload: bytes) -> None:
         cid = self._corr.next()
         if self._trace:
-            self._trace.record({
-                "ts": self._clock.now,
-                "agent": str(self._agent_id),
-                "kind": "send",
-                "to": str(to),
-                "size": len(payload),
-                "corr": str(cid),
-            })
+            self._trace.record(
+                {
+                    "ts": self._clock.now,
+                    "agent": str(self._agent_id),
+                    "kind": "send",
+                    "to": str(to),
+                    "size": len(payload),
+                    "corr": str(cid),
+                }
+            )
         await self._transport.send(to, payload, correlation_id=cid)
 
     async def broadcast(self, payload: bytes) -> None:
         cid = self._corr.next()
         if self._trace:
-            self._trace.record({
-                "ts": self._clock.now,
-                "agent": str(self._agent_id),
-                "kind": "broadcast",
-                "size": len(payload),
-                "corr": str(cid),
-            })
+            self._trace.record(
+                {
+                    "ts": self._clock.now,
+                    "agent": str(self._agent_id),
+                    "kind": "broadcast",
+                    "size": len(payload),
+                    "corr": str(cid),
+                }
+            )
         await self._transport.broadcast(payload, correlation_id=cid)
 
     async def schedule(self, delay: float, payload: bytes) -> None:
-        self._queue.push(Event(
-            time=self._clock.now + delay,
-            kind="deliver",
-            agent_id=self._agent_id,
-            target_id=self._agent_id,
-            payload=payload,
-        ))
+        self._queue.push(
+            Event(
+                time=self._clock.now + delay,
+                kind="deliver",
+                agent_id=self._agent_id,
+                target_id=self._agent_id,
+                payload=payload,
+            )
+        )
 
 
 # Verify _SimAgentContext satisfies the protocol at import time
@@ -255,16 +261,20 @@ class Simulator:
         for aid, slot in self._agents.items():
             ctx = self._make_context(aid, slot)
             if self._trace:
-                self._trace.record({
-                    "ts": self._clock.now,
-                    "agent": str(aid),
-                    "kind": "start",
-                })
-            self._queue.push(Event(
-                time=self._clock.now,
-                kind="start",
-                agent_id=aid,
-            ))
+                self._trace.record(
+                    {
+                        "ts": self._clock.now,
+                        "agent": str(aid),
+                        "kind": "start",
+                    }
+                )
+            self._queue.push(
+                Event(
+                    time=self._clock.now,
+                    kind="start",
+                    agent_id=aid,
+                )
+            )
 
         for aid, slot in self._agents.items():
             ctx = self._make_context(aid, slot)
@@ -316,9 +326,7 @@ class Simulator:
                     self._trace.record(rec)
 
                 if event.target_id in self._byzantine_agents:
-                    garbled = bytes(
-                        (b ^ self._failure_rng.randint(0, 255)) for b in event.payload
-                    )
+                    garbled = bytes((b ^ self._failure_rng.randint(0, 255)) for b in event.payload)
                     ctx = self._make_context(event.agent_id, target_slot)
                     await target_slot.agent.on_message(ctx, event.target_id, garbled)
                 else:
@@ -328,11 +336,13 @@ class Simulator:
         for aid, slot in self._agents.items():
             ctx = self._make_context(aid, slot)
             if self._trace:
-                self._trace.record({
-                    "ts": self._clock.now,
-                    "agent": str(aid),
-                    "kind": "stop",
-                })
+                self._trace.record(
+                    {
+                        "ts": self._clock.now,
+                        "agent": str(aid),
+                        "kind": "stop",
+                    }
+                )
             await slot.agent.on_stop(ctx)
 
         if self._trace:

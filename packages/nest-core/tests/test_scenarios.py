@@ -16,20 +16,22 @@ class TestAuctionScenario:
     @pytest.mark.asyncio
     async def test_auction_from_dict(self, tmp_path: Path) -> None:
         trace_file = tmp_path / "auction.jsonl"
-        config = ScenarioConfig.from_dict({
-            "name": "test-auction",
-            "seed": 42,
-            "agents": {
-                "count": 6,
-                "roles": [
-                    {"name": "auctioneer", "count": 1},
-                    {"name": "bidder", "count": 5},
-                ],
-            },
-            "task": {"type": "auction", "config": {"rounds": 3}},
-            "duration": "ticks: 5000",
-            "output": {"trace": str(trace_file)},
-        })
+        config = ScenarioConfig.from_dict(
+            {
+                "name": "test-auction",
+                "seed": 42,
+                "agents": {
+                    "count": 6,
+                    "roles": [
+                        {"name": "auctioneer", "count": 1},
+                        {"name": "bidder", "count": 5},
+                    ],
+                },
+                "task": {"type": "auction", "config": {"rounds": 3}},
+                "duration": "ticks: 5000",
+                "output": {"trace": str(trace_file)},
+            }
+        )
 
         runner = ScenarioRunner(config)
         result = await runner.run()
@@ -70,21 +72,23 @@ class TestVotingScenario:
     @pytest.mark.asyncio
     async def test_voting_from_dict(self, tmp_path: Path) -> None:
         trace_file = tmp_path / "voting.jsonl"
-        config = ScenarioConfig.from_dict({
-            "name": "test-voting",
-            "seed": 42,
-            "agents": {
-                "count": 12,
-                "roles": [
-                    {"name": "proposer", "count": 1},
-                    {"name": "coordinator", "count": 1},
-                    {"name": "voter", "count": 10},
-                ],
-            },
-            "task": {"type": "voting", "config": {"rounds": 3, "threshold": 0.5}},
-            "duration": "ticks: 5000",
-            "output": {"trace": str(trace_file)},
-        })
+        config = ScenarioConfig.from_dict(
+            {
+                "name": "test-voting",
+                "seed": 42,
+                "agents": {
+                    "count": 12,
+                    "roles": [
+                        {"name": "proposer", "count": 1},
+                        {"name": "coordinator", "count": 1},
+                        {"name": "voter", "count": 10},
+                    ],
+                },
+                "task": {"type": "voting", "config": {"rounds": 3, "threshold": 0.5}},
+                "duration": "ticks: 5000",
+                "output": {"trace": str(trace_file)},
+            }
+        )
 
         runner = ScenarioRunner(config)
         result = await runner.run()
@@ -125,21 +129,23 @@ class TestVotingScenario:
         traces: list[str] = []
         for i in range(2):
             trace_file = tmp_path / f"vote_{i}.jsonl"
-            config = ScenarioConfig.from_dict({
-                "name": "det-vote",
-                "seed": 77,
-                "agents": {
-                    "count": 7,
-                    "roles": [
-                        {"name": "proposer", "count": 1},
-                        {"name": "coordinator", "count": 1},
-                        {"name": "voter", "count": 5},
-                    ],
-                },
-                "task": {"type": "voting", "config": {"rounds": 2}},
-                "duration": "ticks: 3000",
-                "output": {"trace": str(trace_file)},
-            })
+            config = ScenarioConfig.from_dict(
+                {
+                    "name": "det-vote",
+                    "seed": 77,
+                    "agents": {
+                        "count": 7,
+                        "roles": [
+                            {"name": "proposer", "count": 1},
+                            {"name": "coordinator", "count": 1},
+                            {"name": "voter", "count": 5},
+                        ],
+                    },
+                    "task": {"type": "voting", "config": {"rounds": 2}},
+                    "duration": "ticks: 3000",
+                    "output": {"trace": str(trace_file)},
+                }
+            )
             runner = ScenarioRunner(config)
             await runner.run()
             traces.append(trace_file.read_text())

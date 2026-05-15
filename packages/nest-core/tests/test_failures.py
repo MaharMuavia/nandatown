@@ -140,8 +140,7 @@ class TestByzantineAgents:
         assert sim.message_count > 0
         all_received = a.received + b.received
         corrupted = sum(
-            1 for r in all_received
-            if not r.decode("utf-8", errors="replace").startswith("ping-")
+            1 for r in all_received if not r.decode("utf-8", errors="replace").startswith("ping-")
         )
         assert corrupted > 0
 
@@ -150,21 +149,23 @@ class TestFailureViaRunner:
     @pytest.mark.asyncio
     async def test_runner_with_message_drop(self, tmp_path: Path) -> None:
         trace_file = tmp_path / "fail.jsonl"
-        config = ScenarioConfig.from_dict({
-            "name": "fail-test",
-            "seed": 42,
-            "agents": {
-                "count": 10,
-                "roles": [
-                    {"name": "buyer", "count": 5},
-                    {"name": "seller", "count": 5},
-                ],
-            },
-            "task": {"type": "marketplace", "config": {"rounds": 5}},
-            "failures": {"message_drop": 0.3},
-            "duration": "ticks: 3000",
-            "output": {"trace": str(trace_file)},
-        })
+        config = ScenarioConfig.from_dict(
+            {
+                "name": "fail-test",
+                "seed": 42,
+                "agents": {
+                    "count": 10,
+                    "roles": [
+                        {"name": "buyer", "count": 5},
+                        {"name": "seller", "count": 5},
+                    ],
+                },
+                "task": {"type": "marketplace", "config": {"rounds": 5}},
+                "failures": {"message_drop": 0.3},
+                "duration": "ticks: 3000",
+                "output": {"trace": str(trace_file)},
+            }
+        )
 
         runner = ScenarioRunner(config)
         result = await runner.run()

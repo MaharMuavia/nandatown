@@ -31,14 +31,21 @@ class TestRun:
         yaml_path = Path(__file__).parent.parent.parent.parent / "scenarios" / "marketplace.yaml"
         if not yaml_path.exists():
             import pytest
+
             pytest.skip("marketplace.yaml not found")
 
         trace_out = tmp_path / "trace.jsonl"
-        result = runner.invoke(app, [
-            "run", str(yaml_path),
-            "--ticks", "2000",
-            "-o", str(trace_out),
-        ])
+        result = runner.invoke(
+            app,
+            [
+                "run",
+                str(yaml_path),
+                "--ticks",
+                "2000",
+                "-o",
+                str(trace_out),
+            ],
+        )
         assert result.exit_code == 0
         assert "Running scenario" in result.output
         assert "Trace written to" in result.output
@@ -53,15 +60,23 @@ class TestRun:
         yaml_path = Path(__file__).parent.parent.parent.parent / "scenarios" / "marketplace.yaml"
         if not yaml_path.exists():
             import pytest
+
             pytest.skip("marketplace.yaml not found")
 
         trace_out = tmp_path / "trace.jsonl"
-        result = runner.invoke(app, [
-            "run", str(yaml_path),
-            "--seed", "999",
-            "--ticks", "1000",
-            "-o", str(trace_out),
-        ])
+        result = runner.invoke(
+            app,
+            [
+                "run",
+                str(yaml_path),
+                "--seed",
+                "999",
+                "--ticks",
+                "1000",
+                "-o",
+                str(trace_out),
+            ],
+        )
         assert result.exit_code == 0
         assert "seed: 999" in result.output
 
@@ -88,6 +103,7 @@ class TestInit:
 class TestInspect:
     def test_inspect_trace(self, tmp_path: Path) -> None:
         import json
+
         trace = tmp_path / "test.jsonl"
         events = [
             {"ts": 0.0, "agent": "a1", "kind": "start"},
@@ -111,6 +127,7 @@ class TestInspect:
 class TestReport:
     def test_report_metrics(self, tmp_path: Path) -> None:
         import json
+
         trace = tmp_path / "test.jsonl"
         events = [
             {"ts": 0.0, "agent": "a1", "kind": "start"},
@@ -127,6 +144,7 @@ class TestReport:
 
     def test_report_with_html(self, tmp_path: Path) -> None:
         import json
+
         trace = tmp_path / "test.jsonl"
         events = [
             {"ts": 0.0, "agent": "a1", "kind": "start"},

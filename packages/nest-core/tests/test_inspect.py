@@ -19,10 +19,15 @@ class TestAnalyzeTrace:
         events = [
             {"ts": 0.0, "agent": "a1", "kind": "start"},
             {"ts": 0.0, "agent": "a2", "kind": "start"},
-            {"ts": 1.0, "agent": "a1", "kind": "send", "to": "a2",
-             "size": 10, "corr": "corr-1"},
-            {"ts": 1.0, "agent": "a2", "kind": "receive", "from": "a1",
-             "size": 10, "corr": "corr-1"},
+            {"ts": 1.0, "agent": "a1", "kind": "send", "to": "a2", "size": 10, "corr": "corr-1"},
+            {
+                "ts": 1.0,
+                "agent": "a2",
+                "kind": "receive",
+                "from": "a1",
+                "size": 10,
+                "corr": "corr-1",
+            },
             {"ts": 5.0, "agent": "a1", "kind": "stop"},
             {"ts": 5.0, "agent": "a2", "kind": "stop"},
         ]
@@ -57,20 +62,22 @@ class TestCorrelationIds:
     @pytest.mark.asyncio
     async def test_trace_has_correlation_ids(self, tmp_path: Path) -> None:
         trace_file = tmp_path / "corr.jsonl"
-        config = ScenarioConfig.from_dict({
-            "name": "corr-test",
-            "seed": 42,
-            "agents": {
-                "count": 4,
-                "roles": [
-                    {"name": "buyer", "count": 2},
-                    {"name": "seller", "count": 2},
-                ],
-            },
-            "task": {"type": "marketplace", "config": {"rounds": 2}},
-            "duration": "ticks: 1000",
-            "output": {"trace": str(trace_file)},
-        })
+        config = ScenarioConfig.from_dict(
+            {
+                "name": "corr-test",
+                "seed": 42,
+                "agents": {
+                    "count": 4,
+                    "roles": [
+                        {"name": "buyer", "count": 2},
+                        {"name": "seller", "count": 2},
+                    ],
+                },
+                "task": {"type": "marketplace", "config": {"rounds": 2}},
+                "duration": "ticks: 1000",
+                "output": {"trace": str(trace_file)},
+            }
+        )
 
         runner = ScenarioRunner(config)
         await runner.run()

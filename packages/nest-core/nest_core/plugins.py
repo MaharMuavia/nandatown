@@ -55,8 +55,18 @@ class PluginRegistry:
 
     def _discover_entry_points(self) -> None:
         for layer in [
-            "transport", "comms", "identity", "registry", "auth", "trust",
-            "payments", "coordination", "negotiation", "memory", "privacy", "datafacts",
+            "transport",
+            "comms",
+            "identity",
+            "registry",
+            "auth",
+            "trust",
+            "payments",
+            "coordination",
+            "negotiation",
+            "memory",
+            "privacy",
+            "datafacts",
         ]:
             group = f"nest.plugins.{layer}"
             eps = importlib.metadata.entry_points(group=group)

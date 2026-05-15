@@ -36,16 +36,18 @@ class TestScenarioConfig:
         assert config.seed == 99
 
     def test_roles_parsed(self) -> None:
-        config = ScenarioConfig.from_dict({
-            "name": "roles-test",
-            "agents": {
-                "count": 100,
-                "roles": [
-                    {"name": "buyer", "count": 50},
-                    {"name": "seller", "count": 50},
-                ],
-            },
-        })
+        config = ScenarioConfig.from_dict(
+            {
+                "name": "roles-test",
+                "agents": {
+                    "count": 100,
+                    "roles": [
+                        {"name": "buyer", "count": 50},
+                        {"name": "seller", "count": 50},
+                    ],
+                },
+            }
+        )
         assert len(config.agents.roles) == 2
         assert config.agents.roles[0].name == "buyer"
         assert config.agents.roles[1].count == 50
@@ -101,20 +103,22 @@ class TestMarketplaceScenario:
     @pytest.mark.asyncio
     async def test_marketplace_from_dict(self, tmp_path: Path) -> None:
         trace_file = tmp_path / "trace.jsonl"
-        config = ScenarioConfig.from_dict({
-            "name": "test-marketplace",
-            "seed": 42,
-            "agents": {
-                "count": 20,
-                "roles": [
-                    {"name": "buyer", "count": 10},
-                    {"name": "seller", "count": 10},
-                ],
-            },
-            "task": {"type": "marketplace", "config": {"rounds": 5}},
-            "duration": "ticks: 5000",
-            "output": {"trace": str(trace_file)},
-        })
+        config = ScenarioConfig.from_dict(
+            {
+                "name": "test-marketplace",
+                "seed": 42,
+                "agents": {
+                    "count": 20,
+                    "roles": [
+                        {"name": "buyer", "count": 10},
+                        {"name": "seller", "count": 10},
+                    ],
+                },
+                "task": {"type": "marketplace", "config": {"rounds": 5}},
+                "duration": "ticks: 5000",
+                "output": {"trace": str(trace_file)},
+            }
+        )
 
         runner = ScenarioRunner(config)
         result_path = await runner.run()
@@ -155,14 +159,16 @@ class TestMarketplaceScenario:
         traces: list[str] = []
         for i in range(2):
             trace_file = tmp_path / f"trace_{i}.jsonl"
-            config = ScenarioConfig.from_dict({
-                "name": "det-test",
-                "seed": 123,
-                "agents": {"count": 10},
-                "task": {"type": "marketplace", "config": {"rounds": 3}},
-                "duration": "ticks: 2000",
-                "output": {"trace": str(trace_file)},
-            })
+            config = ScenarioConfig.from_dict(
+                {
+                    "name": "det-test",
+                    "seed": 123,
+                    "agents": {"count": 10},
+                    "task": {"type": "marketplace", "config": {"rounds": 3}},
+                    "duration": "ticks: 2000",
+                    "output": {"trace": str(trace_file)},
+                }
+            )
             runner = ScenarioRunner(config)
             await runner.run()
             traces.append(trace_file.read_text())

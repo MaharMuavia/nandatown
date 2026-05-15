@@ -59,14 +59,16 @@ class InMemoryTransport:
         """
         from nest_core.sim.events import Event
 
-        self._queue.push(Event(
-            time=self._clock.now,
-            kind="deliver",
-            agent_id=to,
-            target_id=self._agent_id,
-            payload=payload,
-            correlation_id=correlation_id,
-        ))
+        self._queue.push(
+            Event(
+                time=self._clock.now,
+                kind="deliver",
+                agent_id=to,
+                target_id=self._agent_id,
+                payload=payload,
+                correlation_id=correlation_id,
+            )
+        )
 
     async def receive(self) -> tuple[AgentId, bytes]:
         """Not used in Tier 1 — the simulator pushes events to agents.

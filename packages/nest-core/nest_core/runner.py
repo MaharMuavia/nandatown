@@ -74,14 +74,48 @@ class ScenarioRunner:
     def _create_agents(self, plugins: dict[str, Any]) -> dict[AgentId, Any]:
         """Create agents based on scenario config and task type.
 
+        When the agent config specifies ``brain`` as ``"llm"`` or ``"shell"``,
+        shell agent factories from *nest-shell* are used instead of the default
+        state-machine factories.
+
         Example::
 
             agents = runner._create_agents(plugins)
         """
+        brain = self._config.agents.brain
+
+        if brain in ("llm", "shell"):
+            return self._create_shell_agents(plugins)
+
         from nest_core.scenarios import get_scenario_factory
 
         factory = get_scenario_factory(self._config.task.type)
         return factory(self._config, plugins)
+
+    def _create_shell_agents(self, plugins: dict[str, Any]) -> dict[AgentId, Any]:
+        """Create LLM-backed shell agents for the configured task type.
+
+        Example::
+
+            agents = runner._create_shell_agents(plugins)
+        """
+        from nest_shell.agent import shell_marketplace_factory
+        from nest_shell.factories import shell_auction_factory, shell_voting_factory
+        from nest_shell.llm import LiteLLMBackend, MockLLMBackend
+
+        model = self._config.agents.llm_model
+        backend = MockLLMBackend() if model == "mock" else LiteLLMBackend(model=model)
+
+        task_type = self._config.task.type
+        if task_type == "marketplace":
+            return shell_marketplace_factory(self._config, plugins, backend=backend)
+        if task_type == "auction":
+            return shell_auction_factory(self._config, plugins, backend=backend)
+        if task_type == "voting":
+            return shell_voting_factory(self._config, plugins, backend=backend)
+
+        msg = f"No shell factory for task type {task_type!r}"
+        raise KeyError(msg)
 
     async def run(self) -> Path:
         """Run the scenario and return the trace file path.

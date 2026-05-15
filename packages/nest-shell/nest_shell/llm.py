@@ -97,10 +97,10 @@ class MockLLMBackend:
                 return response
 
         if "buy:" in last_msg or "purchase" in last_msg.lower():
-            return 'ACTION: send\nTO: {sender}\nMESSAGE: sold:product:50'
+            return "ACTION: send\nTO: {sender}\nMESSAGE: sold:product:50"
         if "sold:" in last_msg:
-            return 'ACTION: send\nTO: {sender}\nMESSAGE: buy:product-next:60'
+            return "ACTION: send\nTO: {sender}\nMESSAGE: buy:product-next:60"
         if "reject:" in last_msg:
-            return 'ACTION: send\nTO: {sender}\nMESSAGE: buy:product-retry:70'
+            return "ACTION: send\nTO: {sender}\nMESSAGE: buy:product-retry:70"
 
         return "ACTION: none"

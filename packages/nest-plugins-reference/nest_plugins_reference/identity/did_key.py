@@ -38,7 +38,9 @@ class DidKeyIdentity:
         self._private_keys: dict[AgentId, bytes] = {agent_id: self._private_key}
 
     def register_peer(
-        self, agent_id: AgentId, public_key: bytes,
+        self,
+        agent_id: AgentId,
+        public_key: bytes,
         private_key: bytes | None = None,
     ) -> None:
         """Register a peer's public key (and optionally private key) for verification.

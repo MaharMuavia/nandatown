@@ -3,13 +3,27 @@
 name = "nest-shell"
 version = "0.1.0"
 description = "NEST shell: Tier 2 LLM-backed reference agent"
+readme = "../../README.md"
 requires-python = ">=3.12"
 license = "Apache-2.0"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Testing",
+    "Typing :: Typed",
+]
 dependencies = [
     "nest-core",
     "nest-sdk",
     "litellm>=1.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/mariagorskikh/nest"
+Repository = "https://github.com/mariagorskikh/nest"
 
 [build-system]
 requires = ["hatchling"]

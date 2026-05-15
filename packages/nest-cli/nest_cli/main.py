@@ -71,7 +71,10 @@ async def _run_scenario(config: Any) -> Path:
 def init(
     name: str = typer.Argument("my-scenario", help="Name for the new scenario."),
     directory: str | None = typer.Option(
-        None, "-d", "--dir", help="Directory to create the file in.",
+        None,
+        "-d",
+        "--dir",
+        help="Directory to create the file in.",
     ),
 ) -> None:
     """Scaffold a new scenario YAML file."""
@@ -176,8 +179,18 @@ def doctor() -> None:
 
         reg = PluginRegistry()
         layers = [
-            "transport", "comms", "identity", "registry", "auth", "trust",
-            "payments", "coordination", "negotiation", "memory", "privacy", "datafacts",
+            "transport",
+            "comms",
+            "identity",
+            "registry",
+            "auth",
+            "trust",
+            "payments",
+            "coordination",
+            "negotiation",
+            "memory",
+            "privacy",
+            "datafacts",
         ]
         plugin_ok = 0
         for layer_name in layers:
@@ -240,7 +253,10 @@ def report(
     trace: str = typer.Argument(help="Path to a JSONL trace file."),
     output: str | None = typer.Option(None, "-o", "--output", help="Output HTML report path."),
     metrics: str | None = typer.Option(
-        None, "-m", "--metrics", help="Comma-separated metric names.",
+        None,
+        "-m",
+        "--metrics",
+        help="Comma-separated metric names.",
     ),
 ) -> None:
     """Compute metrics and generate an HTML report from a trace."""
@@ -261,6 +277,87 @@ def report(
     if output:
         out_path = generate_html_report(path, results, output)
         typer.echo(f"\nReport written to: {out_path}")
+
+
+@app.command()
+def dashboard(
+    trace: str | None = typer.Argument(None, help="Optional trace file to load."),
+    port: int = typer.Option(8080, help="Port to serve on."),
+) -> None:
+    """Open the interactive trace dashboard in a browser."""
+    import functools
+    import http.server
+    import threading
+    import webbrowser
+
+    dashboard_html = _find_dashboard_html()
+    if dashboard_html is None:
+        typer.echo("Error: cannot locate apps/dashboard/index.html", err=True)
+        raise typer.Exit(1)
+
+    html_content = dashboard_html.read_text(encoding="utf-8")
+
+    if trace is not None:
+        trace_path = Path(trace)
+        if not trace_path.exists():
+            typer.echo(f"Error: trace file not found: {trace}", err=True)
+            raise typer.Exit(1)
+        trace_text = trace_path.read_text(encoding="utf-8")
+        # Escape for safe embedding inside JS string literal
+        escaped = trace_text.replace("\\", "\\\\").replace("`", "\\`").replace("$", "\\$")
+        html_content = html_content.replace("__NEST_TRACE_DATA__", escaped)
+
+    # Serve from a temporary directory with the (possibly modified) HTML
+    import tempfile
+
+    serve_dir = tempfile.mkdtemp(prefix="nest-dashboard-")
+    serve_path = Path(serve_dir) / "index.html"
+    serve_path.write_text(html_content, encoding="utf-8")
+
+    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=serve_dir)
+    server = http.server.HTTPServer(("127.0.0.1", port), handler)
+
+    url = f"http://127.0.0.1:{port}"
+    typer.echo(f"Serving dashboard at {url}")
+    if trace is not None:
+        typer.echo(f"  trace: {trace}")
+    typer.echo("Press Ctrl+C to stop.\n")
+
+    # Open browser after a short delay so the server is ready
+    def _open_browser() -> None:
+        import time
+
+        time.sleep(0.4)
+        webbrowser.open(url)
+
+    t = threading.Thread(target=_open_browser, daemon=True)
+    t.start()
+
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        typer.echo("\nShutting down.")
+    finally:
+        server.server_close()
+
+
+def _find_dashboard_html() -> Path | None:
+    """Locate the dashboard HTML file relative to the project root."""
+    # Walk up from this file to find the repo root (contains pyproject.toml workspace)
+    candidates: list[Path] = []
+
+    # Try relative to CWD
+    candidates.append(Path.cwd() / "apps" / "dashboard" / "index.html")
+
+    # Try relative to this source file
+    cli_dir = Path(__file__).resolve().parent  # nest_cli/
+    for ancestor in [cli_dir.parent, cli_dir.parent.parent, cli_dir.parent.parent.parent]:
+        candidates.append(ancestor / "apps" / "dashboard" / "index.html")
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
 
 
 @app.command()

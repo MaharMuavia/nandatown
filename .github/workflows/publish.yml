@@ -1,0 +1,146 @@
+# SPDX-License-Identifier: Apache-2.0
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  id-token: write  # OIDC for trusted publishing
+
+jobs:
+  # Phase 1: Build and publish core (no NEST deps)
+  publish-core:
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build nest-core
+        run: uv build --package nest-core
+      - name: Publish nest-core
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+
+  # Phase 2: Build and publish SDK (depends on core)
+  publish-sdk:
+    needs: publish-core
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build nest-sdk
+        run: uv build --package nest-sdk
+      - name: Publish nest-sdk
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+
+  # Phase 3: Build and publish plugins-reference (depends on core + sdk)
+  publish-plugins-reference:
+    needs: publish-sdk
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build nest-plugins-reference
+        run: uv build --package nest-plugins-reference
+      - name: Publish nest-plugins-reference
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+
+  # Phase 4: Build and publish leaf packages (parallel, depend on sdk)
+  publish-cli:
+    needs: publish-sdk
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build nest-cli
+        run: uv build --package nest-cli
+      - name: Publish nest-cli
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+
+  publish-shell:
+    needs: publish-sdk
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build nest-shell
+        run: uv build --package nest-shell
+      - name: Publish nest-shell
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+
+  publish-scenarios:
+    needs: publish-core
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build nest-scenarios
+        run: uv build --package nest-scenarios
+      - name: Publish nest-scenarios
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+
+  publish-mocks:
+    needs: publish-core
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build nest-mocks
+        run: uv build --package nest-mocks
+      - name: Publish nest-mocks
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/

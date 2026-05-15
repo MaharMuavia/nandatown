@@ -82,8 +82,6 @@ class InMemoryRegistry:
 
     @staticmethod
     def _matches(card: AgentCard, query: Query) -> bool:
-        if query.capabilities and not all(
-            cap in card.capabilities for cap in query.capabilities
-        ):
+        if query.capabilities and not all(cap in card.capabilities for cap in query.capabilities):
             return False
         return not (query.name_pattern and query.name_pattern not in card.name)

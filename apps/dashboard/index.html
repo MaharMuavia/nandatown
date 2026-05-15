@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEST Trace Dashboard</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+:root {
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-card: #1f2b47;
+  --bg-card-hover: #253352;
+  --border: #2a3a5c;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent-green: #4ade80;
+  --accent-blue: #60a5fa;
+  --accent-red: #f87171;
+  --accent-yellow: #fbbf24;
+  --accent-purple: #a78bfa;
+  --accent-cyan: #22d3ee;
+  --accent-gray: #94a3b8;
+  --accent-orange: #fb923c;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Header */
+.header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.header h1 span { color: var(--accent-cyan); }
+.header-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Upload area */
+.upload-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 60px);
+  padding: 40px;
+}
+.upload-zone {
+  width: 100%;
+  max-width: 600px;
+  padding: 60px 40px;
+  border: 2px dashed var(--border);
+  border-radius: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: var(--bg-secondary);
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--accent-cyan);
+  background: rgba(34,211,238,0.05);
+}
+.upload-zone h2 { font-size: 22px; margin-bottom: 12px; font-weight: 500; }
+.upload-zone p { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; }
+.upload-zone .btn {
+  display: inline-block;
+  padding: 10px 28px;
+  background: var(--accent-cyan);
+  color: var(--bg-primary);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s;
+}
+.upload-zone .btn:hover { opacity: 0.85; }
+.upload-zone input[type="file"] { display: none; }
+
+/* Dashboard layout */
+.dashboard { display: none; }
+.dashboard.active { display: block; }
+
+/* Summary cards */
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  padding: 16px 24px;
+}
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  transition: background 0.2s;
+}
+.card:hover { background: var(--bg-card-hover); }
+.card .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+.card .value { font-size: 26px; font-weight: 700; }
+.card .value.green { color: var(--accent-green); }
+.card .value.blue { color: var(--accent-blue); }
+.card .value.red { color: var(--accent-red); }
+.card .value.cyan { color: var(--accent-cyan); }
+.card .value.yellow { color: var(--accent-yellow); }
+.card .value.purple { color: var(--accent-purple); }
+
+/* Tabs */
+.tabs-container { padding: 0 24px; }
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  gap: 4px;
+}
+.tab {
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  user-select: none;
+}
+.tab:hover { color: var(--text-secondary); }
+.tab.active { color: var(--accent-cyan); border-bottom-color: var(--accent-cyan); }
+
+.tab-panel { display: none; padding: 16px 0; }
+.tab-panel.active { display: block; }
+
+/* Timeline */
+#timeline-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin: 0 24px;
+  overflow-x: auto;
+  position: relative;
+}
+#timeline-container svg { display: block; }
+.timeline-event { cursor: pointer; }
+.timeline-event circle { transition: r 0.15s ease; }
+.timeline-event:hover circle { r: 6; }
+
+/* Tooltip */
+.tooltip {
+  position: fixed;
+  pointer-events: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  line-height: 1.6;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  z-index: 1000;
+  display: none;
+  max-width: 300px;
+}
+.tooltip .tt-kind {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  margin-bottom: 4px;
+}
+.tooltip .tt-row { color: var(--text-secondary); }
+.tooltip .tt-row b { color: var(--text-primary); }
+
+/* Graph */
+#graph-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin: 0 24px;
+  overflow: hidden;
+  position: relative;
+}
+#graph-container svg { display: block; }
+.graph-node text { fill: var(--text-primary); font-size: 11px; font-weight: 500; pointer-events: none; }
+.graph-link { stroke-opacity: 0.5; }
+.graph-arrow { fill-opacity: 0.5; }
+
+/* Table */
+.table-wrapper {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin: 0 24px;
+  overflow-x: auto;
+}
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 10px 16px; text-align: left; font-size: 13px; }
+th {
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  user-select: none;
+  position: sticky;
+  top: 0;
+  border-bottom: 1px solid var(--border);
+}
+th:hover { color: var(--text-secondary); }
+th .sort-arrow { margin-left: 4px; font-size: 10px; }
+td { border-bottom: 1px solid rgba(42,58,92,0.4); color: var(--text-secondary); }
+tr:hover td { background: rgba(34,211,238,0.03); }
+
+/* Metrics */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin: 0 24px;
+}
+.metric-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+}
+.metric-card .metric-title {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+}
+.metric-card .metric-value {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.metric-card .metric-detail { font-size: 12px; color: var(--text-muted); }
+
+/* Legend */
+.legend {
+  display: flex;
+  gap: 16px;
+  padding: 8px 24px;
+  flex-wrap: wrap;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .summary-row { grid-template-columns: repeat(2, 1fr); }
+  .card .value { font-size: 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1><span>NEST</span> Trace Dashboard</h1>
+  <div class="header-meta" id="header-meta"></div>
+</div>
+
+<!-- Upload screen -->
+<div class="upload-container" id="upload-screen">
+  <div class="upload-zone" id="drop-zone">
+    <h2>Load Trace File</h2>
+    <p>Drag and drop a .jsonl trace file here, or click to browse</p>
+    <button class="btn" id="browse-btn">Select File</button>
+    <input type="file" id="file-input" accept=".jsonl,.json,.ndjson">
+  </div>
+</div>
+
+<!-- Dashboard (hidden until file loaded) -->
+<div class="dashboard" id="dashboard">
+
+  <!-- Summary cards -->
+  <div class="summary-row" id="summary-cards"></div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-green)"></div> Send</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-blue)"></div> Receive</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-red)"></div> Dropped</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-purple)"></div> Broadcast</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-gray)"></div> Start / Stop</div>
+  </div>
+
+  <!-- Tab navigation -->
+  <div class="tabs-container">
+    <div class="tabs">
+      <div class="tab active" data-tab="timeline">Timeline</div>
+      <div class="tab" data-tab="graph">Message Flow</div>
+      <div class="tab" data-tab="table">Agent Stats</div>
+      <div class="tab" data-tab="metrics">Metrics</div>
+    </div>
+  </div>
+
+  <!-- Timeline panel -->
+  <div class="tab-panel active" id="panel-timeline">
+    <div id="timeline-container"></div>
+  </div>
+
+  <!-- Graph panel -->
+  <div class="tab-panel" id="panel-graph">
+    <div id="graph-container"></div>
+  </div>
+
+  <!-- Table panel -->
+  <div class="tab-panel" id="panel-table">
+    <div class="table-wrapper">
+      <table id="agent-table">
+        <thead><tr></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Metrics panel -->
+  <div class="tab-panel" id="panel-metrics">
+    <div class="metrics-grid" id="metrics-grid"></div>
+  </div>
+</div>
+
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+(function() {
+  "use strict";
+
+  // ── Color map ──
+  const COLORS = {
+    send: "#4ade80",
+    receive: "#60a5fa",
+    dropped: "#f87171",
+    broadcast: "#a78bfa",
+    start: "#94a3b8",
+    stop: "#94a3b8"
+  };
+
+  // ── Globals ──
+  let traceData = null;
+  let parsedTrace = null;
+
+  // ── File upload handling ──
+  const dropZone = document.getElementById("drop-zone");
+  const fileInput = document.getElementById("file-input");
+  const browseBtn = document.getElementById("browse-btn");
+
+  browseBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    fileInput.click();
+  });
+  dropZone.addEventListener("click", () => fileInput.click());
+
+  dropZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropZone.classList.add("drag-over");
+  });
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("drag-over");
+    if (e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files.length) loadFile(fileInput.files[0]);
+  });
+
+  function loadFile(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      parseAndRender(e.target.result, file.name);
+    };
+    reader.readAsText(file);
+  }
+
+  // ── Auto-load injected trace data ──
+  // The CLI can inject trace data by replacing this marker
+  const INJECTED_TRACE = "__NEST_TRACE_DATA__";
+  if (INJECTED_TRACE !== "__NEST_" + "TRACE_DATA__") {
+    try {
+      parseAndRender(INJECTED_TRACE, "injected-trace.jsonl");
+    } catch(e) {
+      console.error("Failed to load injected trace:", e);
+    }
+  }
+
+  function parseAndRender(text, filename) {
+    const lines = text.trim().split("\n").filter(l => l.trim());
+    const events = [];
+    for (const line of lines) {
+      try { events.push(JSON.parse(line)); } catch(e) { /* skip bad lines */ }
+    }
+    if (events.length === 0) {
+      alert("No valid events found in the file.");
+      return;
+    }
+    traceData = events;
+    parsedTrace = analyzeTrace(events);
+    document.getElementById("upload-screen").style.display = "none";
+    document.getElementById("dashboard").classList.add("active");
+    document.getElementById("header-meta").textContent = filename + " — " + events.length + " events";
+    renderAll();
+  }
+
+  // ── Analysis ──
+  function analyzeTrace(events) {
+    const agents = new Set();
+    const agentStats = {};
+    let sends = 0, receives = 0, dropped = 0, broadcasts = 0;
+    let minTs = Infinity, maxTs = -Infinity;
+    const correlations = {};
+
+    for (const ev of events) {
+      const a = ev.agent;
+      agents.add(a);
+      if (!agentStats[a]) agentStats[a] = { sends: 0, receives: 0, dropped: 0, broadcasts: 0, firstTs: Infinity, lastTs: -Infinity };
+      const s = agentStats[a];
+      if (ev.ts < s.firstTs) s.firstTs = ev.ts;
+      if (ev.ts > s.lastTs) s.lastTs = ev.ts;
+      if (ev.ts < minTs) minTs = ev.ts;
+      if (ev.ts > maxTs) maxTs = ev.ts;
+
+      if (ev.kind === "send") { sends++; s.sends++; }
+      else if (ev.kind === "receive") { receives++; s.receives++; }
+      else if (ev.kind === "dropped") { dropped++; s.dropped++; }
+      else if (ev.kind === "broadcast") { broadcasts++; s.broadcasts++; }
+
+      if (ev.corr) {
+        if (!correlations[ev.corr]) correlations[ev.corr] = [];
+        correlations[ev.corr].push(ev);
+      }
+    }
+
+    // Compute latencies from send->receive pairs
+    const latencies = [];
+    for (const corr of Object.keys(correlations)) {
+      const evs = correlations[corr];
+      const sendEv = evs.find(e => e.kind === "send");
+      const recvEv = evs.find(e => e.kind === "receive");
+      if (sendEv && recvEv) {
+        latencies.push(recvEv.ts - sendEv.ts);
+      }
+    }
+
+    const totalMessages = sends + broadcasts;
+    const deliveredMessages = receives;
+    const successRate = totalMessages > 0 ? deliveredMessages / totalMessages : 1;
+    const meanLatency = latencies.length > 0 ? latencies.reduce((a,b)=>a+b,0)/latencies.length : 0;
+    const duration = maxTs - minTs;
+    const throughput = duration > 0 ? totalMessages / duration : 0;
+
+    // Message flow edges
+    const edges = {};
+    for (const ev of events) {
+      if (ev.kind === "send" && ev.to) {
+        const key = ev.agent + "->" + ev.to;
+        edges[key] = (edges[key] || 0) + 1;
+      }
+      if (ev.kind === "broadcast") {
+        // broadcast goes to all other agents
+        for (const other of agents) {
+          if (other !== ev.agent) {
+            const key = ev.agent + "->" + other;
+            edges[key] = (edges[key] || 0) + 1;
+          }
+        }
+      }
+    }
+
+    return {
+      events, agents: [...agents].sort(), agentStats, correlations,
+      sends, receives, dropped, broadcasts,
+      minTs, maxTs, duration,
+      latencies, meanLatency, successRate, throughput,
+      edges, totalMessages, deliveredMessages
+    };
+  }
+
+  // ── Render everything ──
+  function renderAll() {
+    renderSummaryCards();
+    renderTimeline();
+    renderGraph();
+    renderTable();
+    renderMetrics();
+  }
+
+  // ── Summary cards ──
+  function renderSummaryCards() {
+    const p = parsedTrace;
+    const cards = [
+      { label: "Total Events", value: p.events.length, cls: "cyan" },
+      { label: "Agents", value: p.agents.length, cls: "purple" },
+      { label: "Messages Sent", value: p.sends + p.broadcasts, cls: "green" },
+      { label: "Success Rate", value: (p.successRate * 100).toFixed(1) + "%", cls: "green" },
+      { label: "Duration", value: p.duration.toFixed(1) + " ticks", cls: "blue" },
+      { label: "Dropped", value: p.dropped, cls: "red" },
+    ];
+    const container = document.getElementById("summary-cards");
+    container.innerHTML = cards.map(c =>
+      `<div class="card"><div class="label">${c.label}</div><div class="value ${c.cls}">${c.value}</div></div>`
+    ).join("");
+  }
+
+  // ── Tooltip ──
+  const tooltip = document.getElementById("tooltip");
+  function showTooltip(ev, x, y) {
+    const kindColor = COLORS[ev.kind] || "#94a3b8";
+    let html = `<div class="tt-kind" style="color:${kindColor}">${ev.kind}</div>`;
+    html += `<div class="tt-row"><b>Agent:</b> ${ev.agent}</div>`;
+    html += `<div class="tt-row"><b>Time:</b> ${ev.ts}</div>`;
+    if (ev.to) html += `<div class="tt-row"><b>To:</b> ${ev.to}</div>`;
+    if (ev.from) html += `<div class="tt-row"><b>From:</b> ${ev.from}</div>`;
+    if (ev.size != null) html += `<div class="tt-row"><b>Size:</b> ${ev.size}</div>`;
+    if (ev.corr) html += `<div class="tt-row"><b>Corr:</b> ${ev.corr}</div>`;
+    tooltip.innerHTML = html;
+    tooltip.style.display = "block";
+    // Position
+    const rect = tooltip.getBoundingClientRect();
+    let left = x + 14;
+    let top = y - 10;
+    if (left + rect.width > window.innerWidth - 10) left = x - rect.width - 14;
+    if (top + rect.height > window.innerHeight - 10) top = y - rect.height + 10;
+    if (top < 10) top = 10;
+    tooltip.style.left = left + "px";
+    tooltip.style.top = top + "px";
+  }
+  function hideTooltip() { tooltip.style.display = "none"; }
+
+  // ── Timeline ──
+  function renderTimeline() {
+    const container = document.getElementById("timeline-container");
+    container.innerHTML = "";
+    const p = parsedTrace;
+    const agents = p.agents;
+    const events = p.events;
+
+    const margin = { top: 30, right: 30, bottom: 40, left: 100 };
+    const rowH = Math.max(24, Math.min(36, 600 / agents.length));
+    const height = margin.top + margin.bottom + agents.length * rowH;
+    const minWidth = 800;
+    const calcWidth = Math.max(minWidth, Math.min(3000, events.length * 0.5 + 400));
+    const width = Math.max(calcWidth, container.clientWidth || minWidth);
+    const innerW = width - margin.left - margin.right;
+    const innerH = height - margin.top - margin.bottom;
+
+    const svg = d3.select(container).append("svg")
+      .attr("width", width).attr("height", height);
+
+    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const xScale = d3.scaleLinear().domain([p.minTs, p.maxTs]).range([0, innerW]);
+    const yScale = d3.scaleBand().domain(agents).range([0, innerH]).padding(0.3);
+
+    // Grid lines
+    const xTicks = xScale.ticks(Math.min(20, Math.floor(innerW / 60)));
+    g.selectAll(".grid-line")
+      .data(xTicks).enter().append("line")
+      .attr("x1", d => xScale(d)).attr("x2", d => xScale(d))
+      .attr("y1", 0).attr("y2", innerH)
+      .attr("stroke", "#2a3a5c").attr("stroke-opacity", 0.4);
+
+    // Agent rows
+    g.selectAll(".agent-row")
+      .data(agents).enter().append("rect")
+      .attr("x", 0).attr("y", d => yScale(d))
+      .attr("width", innerW).attr("height", yScale.bandwidth())
+      .attr("fill", (d, i) => i % 2 === 0 ? "rgba(30,41,59,0.3)" : "transparent");
+
+    // X axis
+    g.append("g")
+      .attr("transform", `translate(0,${innerH})`)
+      .call(d3.axisBottom(xScale).ticks(Math.min(20, Math.floor(innerW / 60))).tickFormat(d => d + "t"))
+      .selectAll("text,line,path").attr("fill", "#64748b").attr("stroke", "#64748b");
+
+    // Y axis (agent labels)
+    g.append("g")
+      .call(d3.axisLeft(yScale))
+      .selectAll("text").attr("fill", "#94a3b8").style("font-size", "11px");
+    g.select(".domain").remove();
+    g.selectAll(".tick line").remove();
+
+    // Correlation lines (draw before dots so dots are on top)
+    for (const corr of Object.keys(p.correlations)) {
+      const evs = p.correlations[corr];
+      const sendEv = evs.find(e => e.kind === "send" || e.kind === "broadcast");
+      const recvEv = evs.find(e => e.kind === "receive");
+      if (sendEv && recvEv) {
+        g.append("line")
+          .attr("x1", xScale(sendEv.ts))
+          .attr("y1", yScale(sendEv.agent) + yScale.bandwidth() / 2)
+          .attr("x2", xScale(recvEv.ts))
+          .attr("y2", yScale(recvEv.agent) + yScale.bandwidth() / 2)
+          .attr("stroke", "#334155")
+          .attr("stroke-width", 1)
+          .attr("stroke-opacity", 0.6);
+      }
+      // Also draw line to dropped events
+      const droppedEv = evs.find(e => e.kind === "dropped");
+      if (sendEv && droppedEv) {
+        g.append("line")
+          .attr("x1", xScale(sendEv.ts))
+          .attr("y1", yScale(sendEv.agent) + yScale.bandwidth() / 2)
+          .attr("x2", xScale(droppedEv.ts))
+          .attr("y2", yScale(droppedEv.agent) + yScale.bandwidth() / 2)
+          .attr("stroke", "#f87171")
+          .attr("stroke-width", 1)
+          .attr("stroke-opacity", 0.4)
+          .attr("stroke-dasharray", "4,3");
+      }
+    }
+
+    // Event dots — use a virtual scroll approach for large datasets
+    // If few enough events, draw them all; otherwise, sample
+    const maxDots = 10000;
+    let displayEvents = events;
+    if (events.length > maxDots) {
+      // Always include start/stop, sample the rest
+      const important = events.filter(e => e.kind === "start" || e.kind === "stop" || e.kind === "dropped");
+      const others = events.filter(e => e.kind !== "start" && e.kind !== "stop" && e.kind !== "dropped");
+      const sampleSize = maxDots - important.length;
+      const step = Math.ceil(others.length / sampleSize);
+      const sampled = others.filter((_, i) => i % step === 0);
+      displayEvents = important.concat(sampled);
+    }
+
+    g.selectAll(".timeline-event")
+      .data(displayEvents).enter().append("g")
+      .attr("class", "timeline-event")
+      .attr("transform", d => `translate(${xScale(d.ts)},${yScale(d.agent) + yScale.bandwidth() / 2})`)
+      .each(function(d) {
+        const el = d3.select(this);
+        if (d.kind === "start" || d.kind === "stop") {
+          el.append("rect")
+            .attr("x", -4).attr("y", -4).attr("width", 8).attr("height", 8)
+            .attr("rx", 2)
+            .attr("fill", COLORS[d.kind]);
+        } else {
+          el.append("circle")
+            .attr("r", 4)
+            .attr("fill", COLORS[d.kind] || "#94a3b8");
+        }
+      })
+      .on("mouseover", function(event, d) { showTooltip(d, event.clientX, event.clientY); })
+      .on("mousemove", function(event, d) { showTooltip(d, event.clientX, event.clientY); })
+      .on("mouseout", hideTooltip);
+  }
+
+  // ── Message flow graph ──
+  function renderGraph() {
+    const container = document.getElementById("graph-container");
+    container.innerHTML = "";
+    const p = parsedTrace;
+
+    const width = container.clientWidth || 800;
+    const height = Math.max(500, Math.min(800, p.agents.length * 40));
+
+    const svg = d3.select(container).append("svg")
+      .attr("width", width).attr("height", height);
+
+    // Defs for arrowheads
+    svg.append("defs").append("marker")
+      .attr("id", "arrowhead")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", 20).attr("refY", 0)
+      .attr("markerWidth", 6).attr("markerHeight", 6)
+      .attr("orient", "auto")
+      .append("path")
+      .attr("d", "M0,-5L10,0L0,5")
+      .attr("fill", "#60a5fa")
+      .attr("class", "graph-arrow");
+
+    // Build nodes
+    const totalByAgent = {};
+    for (const a of p.agents) {
+      const s = p.agentStats[a];
+      totalByAgent[a] = s.sends + s.receives + s.broadcasts;
+    }
+    const maxTotal = Math.max(1, ...Object.values(totalByAgent));
+    const nodes = p.agents.map(a => ({
+      id: a,
+      total: totalByAgent[a],
+      r: Math.max(12, Math.min(30, 12 + (totalByAgent[a] / maxTotal) * 18))
+    }));
+
+    // Build links
+    const links = [];
+    const maxEdge = Math.max(1, ...Object.values(p.edges));
+    for (const [key, count] of Object.entries(p.edges)) {
+      const [src, tgt] = key.split("->");
+      links.push({ source: src, target: tgt, count, width: Math.max(1, (count / maxEdge) * 6) });
+    }
+
+    const simulation = d3.forceSimulation(nodes)
+      .force("link", d3.forceLink(links).id(d => d.id).distance(100))
+      .force("charge", d3.forceManyBody().strength(-200))
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("collision", d3.forceCollide().radius(d => d.r + 10));
+
+    const link = svg.selectAll(".graph-link")
+      .data(links).enter().append("line")
+      .attr("class", "graph-link")
+      .attr("stroke", "#60a5fa")
+      .attr("stroke-width", d => d.width)
+      .attr("marker-end", "url(#arrowhead)");
+
+    const node = svg.selectAll(".graph-node")
+      .data(nodes).enter().append("g")
+      .attr("class", "graph-node")
+      .call(d3.drag()
+        .on("start", (event, d) => { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+        .on("drag", (event, d) => { d.fx = event.x; d.fy = event.y; })
+        .on("end", (event, d) => { if (!event.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; })
+      );
+
+    node.append("circle")
+      .attr("r", d => d.r)
+      .attr("fill", "rgba(34,211,238,0.15)")
+      .attr("stroke", "#22d3ee")
+      .attr("stroke-width", 1.5);
+
+    node.append("text")
+      .attr("dy", "0.35em")
+      .attr("text-anchor", "middle")
+      .text(d => d.id);
+
+    simulation.on("tick", () => {
+      link
+        .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+      node.attr("transform", d => `translate(${d.x},${d.y})`);
+    });
+  }
+
+  // ── Agent stats table ──
+  let tableSortCol = "agent";
+  let tableSortAsc = true;
+
+  function renderTable() {
+    const p = parsedTrace;
+    const columns = [
+      { key: "agent", label: "Agent" },
+      { key: "sends", label: "Sends" },
+      { key: "receives", label: "Receives" },
+      { key: "broadcasts", label: "Broadcasts" },
+      { key: "dropped", label: "Dropped" },
+      { key: "firstTs", label: "First Active" },
+      { key: "lastTs", label: "Last Active" },
+    ];
+
+    const thead = document.querySelector("#agent-table thead tr");
+    thead.innerHTML = columns.map(c => {
+      const arrow = tableSortCol === c.key ? (tableSortAsc ? " ▲" : " ▼") : "";
+      return `<th data-col="${c.key}">${c.label}<span class="sort-arrow">${arrow}</span></th>`;
+    }).join("");
+
+    // Build rows
+    let rows = p.agents.map(a => {
+      const s = p.agentStats[a];
+      return { agent: a, sends: s.sends, receives: s.receives, broadcasts: s.broadcasts, dropped: s.dropped, firstTs: s.firstTs, lastTs: s.lastTs };
+    });
+
+    rows.sort((a, b) => {
+      let va = a[tableSortCol], vb = b[tableSortCol];
+      if (typeof va === "string") { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+      if (va < vb) return tableSortAsc ? -1 : 1;
+      if (va > vb) return tableSortAsc ? 1 : -1;
+      return 0;
+    });
+
+    const tbody = document.querySelector("#agent-table tbody");
+    tbody.innerHTML = rows.map(r =>
+      `<tr>
+        <td style="color:var(--text-primary);font-weight:500">${r.agent}</td>
+        <td style="color:var(--accent-green)">${r.sends}</td>
+        <td style="color:var(--accent-blue)">${r.receives}</td>
+        <td style="color:var(--accent-purple)">${r.broadcasts}</td>
+        <td style="color:${r.dropped > 0 ? 'var(--accent-red)' : 'var(--text-muted)'}">${r.dropped}</td>
+        <td>${r.firstTs}</td>
+        <td>${r.lastTs}</td>
+      </tr>`
+    ).join("");
+
+    // Sort click handlers
+    thead.querySelectorAll("th").forEach(th => {
+      th.addEventListener("click", () => {
+        const col = th.dataset.col;
+        if (tableSortCol === col) { tableSortAsc = !tableSortAsc; }
+        else { tableSortCol = col; tableSortAsc = true; }
+        renderTable();
+      });
+    });
+  }
+
+  // ── Metrics panel ──
+  function renderMetrics() {
+    const p = parsedTrace;
+    const grid = document.getElementById("metrics-grid");
+
+    const p50 = percentile(p.latencies, 0.5);
+    const p95 = percentile(p.latencies, 0.95);
+    const p99 = percentile(p.latencies, 0.99);
+
+    const metrics = [
+      {
+        title: "Success Rate",
+        value: (p.successRate * 100).toFixed(1) + "%",
+        color: p.successRate >= 0.9 ? "var(--accent-green)" : p.successRate >= 0.7 ? "var(--accent-yellow)" : "var(--accent-red)",
+        detail: `${p.deliveredMessages} of ${p.totalMessages} messages delivered`
+      },
+      {
+        title: "Mean Latency",
+        value: p.meanLatency.toFixed(2) + " ticks",
+        color: "var(--accent-blue)",
+        detail: `Based on ${p.latencies.length} correlated send/receive pairs`
+      },
+      {
+        title: "Latency P50 / P95 / P99",
+        value: p50.toFixed(2) + " / " + p95.toFixed(2) + " / " + p99.toFixed(2),
+        color: "var(--accent-cyan)",
+        detail: "Percentile latencies in ticks"
+      },
+      {
+        title: "Throughput",
+        value: p.throughput.toFixed(2) + " msg/tick",
+        color: "var(--accent-purple)",
+        detail: `${p.totalMessages} messages over ${p.duration.toFixed(1)} ticks`
+      },
+      {
+        title: "Dropped Messages",
+        value: String(p.dropped),
+        color: p.dropped === 0 ? "var(--accent-green)" : "var(--accent-red)",
+        detail: p.dropped === 0 ? "No messages dropped" : `${(p.dropped / Math.max(1, p.totalMessages) * 100).toFixed(1)}% of sent messages`
+      },
+      {
+        title: "Active Agents",
+        value: String(p.agents.length),
+        color: "var(--accent-cyan)",
+        detail: `Across ${p.duration.toFixed(1)} tick simulation window`
+      }
+    ];
+
+    grid.innerHTML = metrics.map(m =>
+      `<div class="metric-card">
+        <div class="metric-title">${m.title}</div>
+        <div class="metric-value" style="color:${m.color}">${m.value}</div>
+        <div class="metric-detail">${m.detail}</div>
+      </div>`
+    ).join("");
+  }
+
+  function percentile(arr, p) {
+    if (arr.length === 0) return 0;
+    const sorted = [...arr].sort((a, b) => a - b);
+    const idx = Math.ceil(p * sorted.length) - 1;
+    return sorted[Math.max(0, idx)];
+  }
+
+  // ── Tab switching ──
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+      // Re-render graph when switching to it (needs container width)
+      if (tab.dataset.tab === "graph" && parsedTrace) renderGraph();
+    });
+  });
+
+  // ── Expose for CLI injection ──
+  window.__nestLoadTrace = parseAndRender;
+
+})();
+</script>
+</body>
+</html>

@@ -48,12 +48,15 @@ class JwtAuth:
             token = await auth.issue(AgentId("a1"), ["read", "write"])
         """
         now = self._now()
-        payload = json.dumps({
-            "sub": str(subject),
-            "scopes": scopes,
-            "iat": now,
-            "exp": now + 3600,
-        }, sort_keys=True)
+        payload = json.dumps(
+            {
+                "sub": str(subject),
+                "scopes": scopes,
+                "iat": now,
+                "exp": now + 3600,
+            },
+            sort_keys=True,
+        )
         sig = self._sign(payload)
         return Token(f"{payload}|{sig}")
 

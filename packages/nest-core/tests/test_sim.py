@@ -137,6 +137,7 @@ class TestSimulator:
         assert len(lines) > 0
 
         import json
+
         for line in lines:
             event = json.loads(line)
             assert "ts" in event

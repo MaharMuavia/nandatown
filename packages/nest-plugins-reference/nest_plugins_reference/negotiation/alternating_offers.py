@@ -74,7 +74,7 @@ class AlternatingOffers:
             return NegotiationResponse(accepted=True)
 
         rounds = len(session.history)
-        threshold = session.current_terms.price.amount * (self._patience ** rounds)
+        threshold = session.current_terms.price.amount * (self._patience**rounds)
         if session.current_terms.price.amount <= threshold or rounds >= 10:
             return NegotiationResponse(accepted=True)
 

@@ -164,13 +164,11 @@ def generate_html_report(
         event_counts[kind] += 1
 
     metrics_rows = "".join(
-        f"<tr><td>{name}</td><td>{value:.4f}</td></tr>"
-        for name, value in sorted(metrics.items())
+        f"<tr><td>{name}</td><td>{value:.4f}</td></tr>" for name, value in sorted(metrics.items())
     )
 
     event_rows = "".join(
-        f"<tr><td>{kind}</td><td>{count}</td></tr>"
-        for kind, count in sorted(event_counts.items())
+        f"<tr><td>{kind}</td><td>{count}</td></tr>" for kind, count in sorted(event_counts.items())
     )
 
     agent_rows = ""
@@ -217,16 +215,16 @@ footer {{ margin-top: 3rem; padding-top: 1rem;
 
 <div class="summary">
 <div class="card"><div class="value">\
-{metrics.get('agent_count', len(agent_stats)):.0f}\
+{metrics.get("agent_count", len(agent_stats)):.0f}\
 </div><div class="label">Agents</div></div>
 <div class="card"><div class="value">\
-{metrics.get('message_count', 0):.0f}\
+{metrics.get("message_count", 0):.0f}\
 </div><div class="label">Messages</div></div>
 <div class="card"><div class="value">\
-{metrics.get('success_rate', 0):.1%}\
+{metrics.get("success_rate", 0):.1%}\
 </div><div class="label">Success Rate</div></div>
 <div class="card"><div class="value">\
-{metrics.get('mean_latency', 0):.2f}\
+{metrics.get("mean_latency", 0):.2f}\
 </div><div class="label">Mean Latency</div></div>
 </div>
 

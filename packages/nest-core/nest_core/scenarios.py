@@ -49,10 +49,13 @@ def get_scenario_factory(name: str) -> ScenarioFactory:
 def _try_load_builtin(name: str) -> None:
     if name == "marketplace":
         from nest_core.scenarios_builtin.marketplace import marketplace_factory
+
         register_scenario("marketplace", marketplace_factory)
     elif name == "auction":
         from nest_core.scenarios_builtin.auction import auction_factory
+
         register_scenario("auction", auction_factory)
     elif name == "voting":
         from nest_core.scenarios_builtin.voting import voting_factory
+
         register_scenario("voting", voting_factory)

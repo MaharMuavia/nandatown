@@ -141,7 +141,10 @@ def voting_factory(
 
     agents[proposer_id] = ProposerAgent(proposer_id, num_voters=voter_count, rounds=rounds)
     agents[coordinator_id] = CoordinatorAgent(
-        coordinator_id, proposer=proposer_id, num_voters=voter_count, threshold=threshold,
+        coordinator_id,
+        proposer=proposer_id,
+        num_voters=voter_count,
+        threshold=threshold,
     )
 
     for i in range(voter_count):

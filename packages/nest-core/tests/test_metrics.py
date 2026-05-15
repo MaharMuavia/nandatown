@@ -110,21 +110,23 @@ class TestRunnerMetrics:
     async def test_runner_computes_metrics(self, tmp_path: Path) -> None:
         trace_file = tmp_path / "m.jsonl"
         report_file = tmp_path / "report.html"
-        config = ScenarioConfig.from_dict({
-            "name": "metrics-test",
-            "seed": 42,
-            "agents": {
-                "count": 10,
-                "roles": [
-                    {"name": "buyer", "count": 5},
-                    {"name": "seller", "count": 5},
-                ],
-            },
-            "task": {"type": "marketplace", "config": {"rounds": 3}},
-            "duration": "ticks: 2000",
-            "metrics": ["success_rate", "message_count", "agent_count"],
-            "output": {"trace": str(trace_file), "report": str(report_file)},
-        })
+        config = ScenarioConfig.from_dict(
+            {
+                "name": "metrics-test",
+                "seed": 42,
+                "agents": {
+                    "count": 10,
+                    "roles": [
+                        {"name": "buyer", "count": 5},
+                        {"name": "seller", "count": 5},
+                    ],
+                },
+                "task": {"type": "marketplace", "config": {"rounds": 3}},
+                "duration": "ticks: 2000",
+                "metrics": ["success_rate", "message_count", "agent_count"],
+                "output": {"trace": str(trace_file), "report": str(report_file)},
+            }
+        )
 
         runner = ScenarioRunner(config)
         await runner.run()

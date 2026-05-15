@@ -121,12 +121,14 @@ class ShellAgent(StateMachineAgent):
             seller = AgentId(f"seller-{seller_idx}")
             price = ctx.rng.randint(10, 100)
 
-            self._history.append({
-                "role": "user",
-                "content": f"Simulation started. You are {self._id}. "
-                           f"Send a buy request to a seller. "
-                           f"Suggested target: {seller}, suggested price: {price}.",
-            })
+            self._history.append(
+                {
+                    "role": "user",
+                    "content": f"Simulation started. You are {self._id}. "
+                    f"Send a buy request to a seller. "
+                    f"Suggested target: {seller}, suggested price: {price}.",
+                }
+            )
 
             response = await self._backend.complete(self._history)
             self._history.append({"role": "assistant", "content": response})
@@ -146,10 +148,12 @@ class ShellAgent(StateMachineAgent):
         if self._round > self._rounds:
             return
 
-        self._history.append({
-            "role": "user",
-            "content": f"Message from {sender}: {msg}",
-        })
+        self._history.append(
+            {
+                "role": "user",
+                "content": f"Message from {sender}: {msg}",
+            }
+        )
 
         if len(self._history) > 20:
             self._history = [self._history[0]] + self._history[-18:]

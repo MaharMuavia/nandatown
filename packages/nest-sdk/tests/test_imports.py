@@ -27,8 +27,18 @@ def test_sdk_exports_all_layers() -> None:
     )
 
     layers = [
-        Auth, CommsProtocol, Coordination, DataFacts, Identity, Memory,
-        Negotiation, Payments, Privacy, Registry, Transport, Trust,
+        Auth,
+        CommsProtocol,
+        Coordination,
+        DataFacts,
+        Identity,
+        Memory,
+        Negotiation,
+        Payments,
+        Privacy,
+        Registry,
+        Transport,
+        Trust,
     ]
     assert len(layers) == 12
 
