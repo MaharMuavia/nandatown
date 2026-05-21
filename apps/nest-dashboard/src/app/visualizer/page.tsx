@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import Image from 'next/image';
 
 /* ------------------------------------------------------------------ */
 /*  Real NEST trace format                                            */
@@ -1289,66 +1290,14 @@ export default function VisualizerPage() {
 
           <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr] lg:items-end">
             <div className="animate-fade-in stagger-1 flex items-start gap-5">
-              <svg
-                width={64}
-                height={64}
-                viewBox="0 0 64 64"
-                className="shrink-0 mt-3 hidden sm:block"
-                aria-hidden
-              >
-                {/* nest mark: woven twigs forming an ellipse */}
-                <ellipse
-                  cx="32"
-                  cy="38"
-                  rx="26"
-                  ry="14"
-                  fill="none"
-                  stroke="#C45A3C"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                />
-                <ellipse
-                  cx="32"
-                  cy="36"
-                  rx="20"
-                  ry="9"
-                  fill="none"
-                  stroke="#B58432"
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M8 38 L56 36"
-                  stroke="#221F1A"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                <path
-                  d="M12 32 L52 44"
-                  stroke="#C45A3C"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                <path
-                  d="M12 44 L52 32"
-                  stroke="#B58432"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                {/* egg */}
-                <ellipse
-                  cx="32"
-                  cy="34"
-                  rx="6"
-                  ry="4.5"
-                  fill="#F1DCD0"
-                  stroke="#C45A3C"
-                  strokeWidth="1"
-                />
-              </svg>
+              <Image
+                src="/nest-badge.png"
+                alt=""
+                width={120}
+                height={80}
+                priority
+                className="shrink-0 mt-3 hidden sm:block mix-blend-multiply select-none"
+              />
               <h1 className="font-display text-[clamp(2.6rem,6vw,5rem)] leading-[1.02] tracking-tight text-ink-900">
                 Watch a<br />
                 <span className="italic text-rust">simulation</span><br />
