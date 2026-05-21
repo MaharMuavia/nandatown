@@ -6,7 +6,7 @@ def test_nest_core_imports() -> None:
     """Importing nest_core should succeed and expose a version string."""
     import nest_core
 
-    assert nest_core.__version__ == "0.1.3"
+    assert nest_core.__version__ == "0.1.4"
 
 
 def test_layers_package_imports() -> None:

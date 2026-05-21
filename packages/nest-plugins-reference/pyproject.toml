@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 [project]
 name = "nest-plugins-reference"
-version = "0.1.0"
+version = "0.1.1"
 description = "NEST reference plugins: default implementations for all 12 layers"
 readme = "README.md"
 requires-python = ">=3.12"
