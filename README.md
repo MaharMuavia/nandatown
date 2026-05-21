@@ -4,6 +4,9 @@
 [![CI](https://github.com/mariagorskikh/nest/actions/workflows/ci.yml/badge.svg)](https://github.com/mariagorskikh/nest/actions/workflows/ci.yml)
 [![Status: Alpha](https://img.shields.io/badge/Status-Alpha-orange.svg)]()
 
+<img width="1280" height="640" alt="nest_social_preview_1280x640" src="https://github.com/user-attachments/assets/0a64fce5-3b14-4c05-bf61-47379900a65b" />
+
+
 # NEST — Network Environment for Swarm Testing
 
 **You have an agent protocol. NEST tells you whether it actually works.**
