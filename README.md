@@ -33,6 +33,7 @@ That's the whole "hello world". No clone, no path, no setup.
 
 ## Table of Contents
 
+- [Hackathon](#hackathon)
 - [Install](#install)
 - [The 60-second tour](#the-60-second-tour)
 - [Test your own protocol](#test-your-own-protocol)
@@ -45,6 +46,24 @@ That's the whole "hello world". No clone, no path, no setup.
 - [Contributing](#contributing)
 - [Citation](#citation)
 - [License](#license)
+
+---
+
+## Hackathon
+
+NEST is hosting a month-long open hackathon. Pick one undersolved
+problem from the 12-layer stack, ship a plugin or scenario or
+validator that fixes it, prove it works under adversarial conditions.
+
+- [Charter](docs/hackathon/charter.md) — the participant brief: what
+  to build, the rules, branch naming.
+- [Problems](docs/hackathon/problems/) — the 10 open problems, each
+  with motivation, success criteria, anti-patterns, and the
+  reference files you'll touch.
+- [Judging](docs/hackathon/judging.md) — the six-dimension rubric
+  and how the scoreboard works.
+
+If this is your first time here, read the charter first.
 
 ---
 
