@@ -317,6 +317,37 @@ Two things to know that aren't obvious:
 
 ---
 
+## Hackathon
+
+NEST runs a month-long hackathon where engineers (and agents) submit
+plugins, scenarios, and platform improvements as PRs against a
+`hackathon/*` branch. Every submission is scored by an automated judge
+panel along six dimensions (correctness, test rigor, API fit, docs,
+novelty, persona fidelity), each on a 1-5 scale.
+
+### Scoreboard
+
+> Live scoreboard: [`docs/hackathon/scores.json`](docs/hackathon/scores.json) — machine-readable scores for every open hackathon PR. A marketplace UI on top of this file is coming.
+
+The judge panel lives in [`scripts/judge/`](scripts/judge/):
+
+- [`scripts/judge/rubric.md`](scripts/judge/rubric.md) — the rubric prompt (versioned).
+- [`scripts/judge/judge_pr.py`](scripts/judge/judge_pr.py) — score one PR with N parallel judges via the Anthropic API, with prompt caching on the rubric.
+- [`scripts/judge/run_all.py`](scripts/judge/run_all.py) — CLI that scores every open `hackathon/*` PR and writes the scoreboard JSON. Idempotent on HEAD SHA.
+
+Re-run the full scoreboard with three live Opus judges per PR:
+
+```bash
+export ANTHROPIC_API_KEY=...
+uv run python -m scripts.judge.run_all --output docs/hackathon/scores.json
+```
+
+Without an API key the CLI falls back to deterministic mock judges so the
+schema is exercised even in CI. See the in-repo PR description for the
+full cost model and how to reproduce.
+
+---
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, coding

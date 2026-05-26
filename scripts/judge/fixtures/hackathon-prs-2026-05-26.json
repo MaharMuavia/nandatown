@@ -1,0 +1,102 @@
+[
+  {
+    "number": 2,
+    "head_sha": "4e0f4d547920ce91695d0002566dff108d491de4",
+    "head_ref": "hackathon/harvard-phd-eigentrust",
+    "author": "mariagorskikh",
+    "title": "[Hackathon] harvard-phd: EigenTrust plugin with checkable invariants",
+    "body": "Trust layer EigenTrust plugin with property tests (simplex, row-stochasticity, Sybil bound).",
+    "diff": "diff --git a/file_0.py b/file_0.py\n+# stub diff for PR 2\n\ndiff --git a/file_1.py b/file_1.py\n+# stub diff for PR 2\n\ndiff --git a/file_2.py b/file_2.py\n+# stub diff for PR 2\n\ndiff --git a/file_3.py b/file_3.py\n+# stub diff for PR 2\n",
+    "checks_summary": "no check runs reported (offline smoke)"
+  },
+  {
+    "number": 3,
+    "head_sha": "0a1b071f641ecfd192a0e949807ad4678776a43d",
+    "head_ref": "hackathon/mit-undergrad-eigentrust",
+    "author": "mariagorskikh",
+    "title": "[Hackathon] mit-undergrad: EigenTrust plugin for the trust layer",
+    "body": "EigenTrust plugin with exp time decay, pre-trusted seeds, stake confidence, lazy recompute.",
+    "diff": "diff --git a/file_0.py b/file_0.py\n+# stub diff for PR 3\n\ndiff --git a/file_1.py b/file_1.py\n+# stub diff for PR 3\n\ndiff --git a/file_2.py b/file_2.py\n+# stub diff for PR 3\n\ndiff --git a/file_3.py b/file_3.py\n+# stub diff for PR 3\n",
+    "checks_summary": "no check runs reported (offline smoke)"
+  },
+  {
+    "number": 4,
+    "head_sha": "cedd3e04c5d86508aaab3d5ed9f2bf1e051486e8",
+    "head_ref": "hackathon/openai-llm-semantic-memory",
+    "author": "mariagorskikh",
+    "title": "[Hackathon] openai-llm: semantic memory plugin (recall + TTL + LRU)",
+    "body": "Memory layer semantic plugin: similarity recall + LRU + TTL, deterministic.",
+    "diff": "diff --git a/file_0.py b/file_0.py\n+# stub diff for PR 4\n\ndiff --git a/file_1.py b/file_1.py\n+# stub diff for PR 4\n\ndiff --git a/file_2.py b/file_2.py\n+# stub diff for PR 4\n\ndiff --git a/file_3.py b/file_3.py\n+# stub diff for PR 4\n\ndiff --git a/file_4.py b/file_4.py\n+# stub diff for PR 4\n\ndiff --git a/file_5.py b/file_5.py\n+# stub diff for PR 4\n",
+    "checks_summary": "no check runs reported (offline smoke)"
+  },
+  {
+    "number": 5,
+    "head_sha": "d94772e0c817b48ec90fcac4760bc612c807c014",
+    "head_ref": "hackathon/cmu-robotics-sealed-bid-coordination",
+    "author": "mariagorskikh",
+    "title": "[Hackathon] cmu-robotics: sealed-bid auction coordination plugin (first-price + Vickrey)",
+    "body": "Coordination sealed-bid auction plugin: first-price + Vickrey + reserve + validators.",
+    "diff": "diff --git a/file_0.py b/file_0.py\n+# stub diff for PR 5\n\ndiff --git a/file_1.py b/file_1.py\n+# stub diff for PR 5\n\ndiff --git a/file_2.py b/file_2.py\n+# stub diff for PR 5\n\ndiff --git a/file_3.py b/file_3.py\n+# stub diff for PR 5\n\ndiff --git a/file_4.py b/file_4.py\n+# stub diff for PR 5\n\ndiff --git a/file_5.py b/file_5.py\n+# stub diff for PR 5\n",
+    "checks_summary": "no check runs reported (offline smoke)"
+  },
+  {
+    "number": 6,
+    "head_sha": "cb9225fe7d0476baef09bc9acc0b69398fb3f936",
+    "head_ref": "hackathon/stanford-ml-phd-eigentrust",
+    "author": "mariagorskikh",
+    "title": "[Hackathon] stanford-ml-phd: EigenTrust plugin for the trust layer",
+    "body": "Trust layer EigenTrust plugin: sparse power iteration, teleport smoothing, adversarial tests.",
+    "diff": "diff --git a/file_0.py b/file_0.py\n+# stub diff for PR 6\n\ndiff --git a/file_1.py b/file_1.py\n+# stub diff for PR 6\n\ndiff --git a/file_2.py b/file_2.py\n+# stub diff for PR 6\n\ndiff --git a/file_3.py b/file_3.py\n+# stub diff for PR 6\n\ndiff --git a/file_4.py b/file_4.py\n+# stub diff for PR 6\n",
+    "checks_summary": "no check runs reported (offline smoke)"
+  },
+  {
+    "number": 7,
+    "head_sha": "56514b86c461a34234ba1185c46d24ed6422626a",
+    "head_ref": "hackathon/coinbase-crypto-htlc-escrow",
+    "author": "mariagorskikh",
+    "title": "[Hackathon] coinbase-crypto: htlc_escrow payments plugin (hash- & time-locked conditional payments)",
+    "body": "Payments htlc_escrow plugin: SHA-256 hashlock + timelock + conservation invariant tests.",
+    "diff": "diff --git a/file_0.py b/file_0.py\n+# stub diff for PR 7\n\ndiff --git a/file_1.py b/file_1.py\n+# stub diff for PR 7\n\ndiff --git a/file_2.py b/file_2.py\n+# stub diff for PR 7\n\ndiff --git a/file_3.py b/file_3.py\n+# stub diff for PR 7\n\ndiff --git a/file_4.py b/file_4.py\n+# stub diff for PR 7\n",
+    "checks_summary": "no check runs reported (offline smoke)"
+  },
+  {
+    "number": 8,
+    "head_sha": "275c2bd2effe0733ea7e026f9430bd0c971a87e7",
+    "head_ref": "hackathon/linux-kernel-latency-transport",
+    "author": "mariagorskikh",
+    "title": "[Hackathon] linux-kernel: per-hop latency models for the in-memory transport",
+    "body": "Transport in-memory per-hop latency models (constant/uniform/normal/exponential/matrix).",
+    "diff": "diff --git a/file_0.py b/file_0.py\n+# stub diff for PR 8\n\ndiff --git a/file_1.py b/file_1.py\n+# stub diff for PR 8\n\ndiff --git a/file_2.py b/file_2.py\n+# stub diff for PR 8\n\ndiff --git a/file_3.py b/file_3.py\n+# stub diff for PR 8\n\ndiff --git a/file_4.py b/file_4.py\n+# stub diff for PR 8\n\ndiff --git a/file_5.py b/file_5.py\n+# stub diff for PR 8\n\ndiff --git a/file_6.py b/file_6.py\n+# stub diff for PR 8\n\ndiff --git a/file_7.py b/file_7.py\n+# stub diff for PR 8\n\ndiff --git a/file_8.py b/file_8.py\n+# stub diff for PR 8\n",
+    "checks_summary": "no check runs reported (offline smoke)"
+  },
+  {
+    "number": 9,
+    "head_sha": "2e638bf89f8037d08f9d0f7dc2f3c46ff1598c84",
+    "head_ref": "hackathon/cybersec-blackhat-dpop-auth",
+    "author": "mariagorskikh",
+    "title": "[Hackathon] cybersec-blackhat: dpop_jwt auth plugin + security validators",
+    "body": "Auth dpop_jwt plugin: RFC-7519 JWT + DPoP proof-of-possession + security validators.",
+    "diff": "diff --git a/file_0.py b/file_0.py\n+# stub diff for PR 9\n\ndiff --git a/file_1.py b/file_1.py\n+# stub diff for PR 9\n\ndiff --git a/file_2.py b/file_2.py\n+# stub diff for PR 9\n\ndiff --git a/file_3.py b/file_3.py\n+# stub diff for PR 9\n\ndiff --git a/file_4.py b/file_4.py\n+# stub diff for PR 9\n",
+    "checks_summary": "no check runs reported (offline smoke)"
+  },
+  {
+    "number": 10,
+    "head_sha": "cb6c1dacb56d1adbcd4cc82761ceec8fbc00eb32",
+    "head_ref": "hackathon/meta-backend-realistic-transport",
+    "author": "mariagorskikh",
+    "title": "[Hackathon] meta-backend: realistic transport plugin (latency, jitter, queueing, loss)",
+    "body": "Transport realistic plugin: lognormal jitter + bandwidth + egress queue + loss.",
+    "diff": "diff --git a/file_0.py b/file_0.py\n+# stub diff for PR 10\n\ndiff --git a/file_1.py b/file_1.py\n+# stub diff for PR 10\n\ndiff --git a/file_2.py b/file_2.py\n+# stub diff for PR 10\n\ndiff --git a/file_3.py b/file_3.py\n+# stub diff for PR 10\n\ndiff --git a/file_4.py b/file_4.py\n+# stub diff for PR 10\n\ndiff --git a/file_5.py b/file_5.py\n+# stub diff for PR 10\n\ndiff --git a/file_6.py b/file_6.py\n+# stub diff for PR 10\n\ndiff --git a/file_7.py b/file_7.py\n+# stub diff for PR 10\n\ndiff --git a/file_8.py b/file_8.py\n+# stub diff for PR 10\n\ndiff --git a/file_9.py b/file_9.py\n+# stub diff for PR 10\n\ndiff --git a/file_10.py b/file_10.py\n+# stub diff for PR 10\n\ndiff --git a/file_11.py b/file_11.py\n+# stub diff for PR 10\n\ndiff --git a/file_12.py b/file_12.py\n+# stub diff for PR 10\n",
+    "checks_summary": "no check runs reported (offline smoke)"
+  },
+  {
+    "number": 11,
+    "head_sha": "cae88400b6177277d5fe824fa9f0283b852402f6",
+    "head_ref": "hackathon/google-staff-netem-transport",
+    "author": "mariagorskikh",
+    "title": "[Hackathon] google-staff: netem transport + tail-latency metrics + SLO validators",
+    "body": "Transport netem plugin + tail latency metrics (p50/p95/p99) + SLO validators.",
+    "diff": "diff --git a/file_0.py b/file_0.py\n+# stub diff for PR 11\n\ndiff --git a/file_1.py b/file_1.py\n+# stub diff for PR 11\n\ndiff --git a/file_2.py b/file_2.py\n+# stub diff for PR 11\n\ndiff --git a/file_3.py b/file_3.py\n+# stub diff for PR 11\n\ndiff --git a/file_4.py b/file_4.py\n+# stub diff for PR 11\n\ndiff --git a/file_5.py b/file_5.py\n+# stub diff for PR 11\n\ndiff --git a/file_6.py b/file_6.py\n+# stub diff for PR 11\n\ndiff --git a/file_7.py b/file_7.py\n+# stub diff for PR 11\n\ndiff --git a/file_8.py b/file_8.py\n+# stub diff for PR 11\n\ndiff --git a/file_9.py b/file_9.py\n+# stub diff for PR 11\n\ndiff --git a/file_10.py b/file_10.py\n+# stub diff for PR 11\n\ndiff --git a/file_11.py b/file_11.py\n+# stub diff for PR 11\n\ndiff --git a/file_12.py b/file_12.py\n+# stub diff for PR 11\n\ndiff --git a/file_13.py b/file_13.py\n+# stub diff for PR 11\n\ndiff --git a/file_14.py b/file_14.py\n+# stub diff for PR 11\n\ndiff --git a/file_15.py b/file_15.py\n+# stub diff for PR 11\n",
+    "checks_summary": "no check runs reported (offline smoke)"
+  }
+]

@@ -1,0 +1,667 @@
+{
+  "version": 1,
+  "generated_at": "2026-05-26T20:05:48+00:00",
+  "mock": true,
+  "submissions": [
+    {
+      "pr": 2,
+      "handle": "harvard-phd",
+      "layer": "trust",
+      "title": "[Hackathon] harvard-phd: EigenTrust plugin with checkable invariants",
+      "author": "mariagorskikh",
+      "head_sha": "4e0f4d547920ce91695d0002566dff108d491de4",
+      "head_ref": "hackathon/harvard-phd-eigentrust",
+      "model": "mock:claude-opus-4-7",
+      "rubric_version": 1,
+      "diff_truncated": false,
+      "scores": {
+        "correctness": 3.0,
+        "test_rigor": 2.0,
+        "api_fit": 3.0,
+        "docs_quality": 5.0,
+        "novelty": 3.0,
+        "persona_fidelity": 4.0
+      },
+      "median": 21.0,
+      "consensus": "PR #2 from the harvard-phd persona scored 20.0/30 across 3 judges, with strongest dimensions docs_quality (5.0) and persona_fidelity (4.0). Judges flagged test_rigor (2.0) and correctness (3.0) as the weakest areas. Lead judge summary: \"Mock judge 0: deterministic synthetic score.\"",
+      "judges": [
+        {
+          "judge_id": 0,
+          "scores": {
+            "correctness": 5,
+            "test_rigor": 3,
+            "api_fit": 4,
+            "docs_quality": 5,
+            "novelty": 3,
+            "persona_fidelity": 5
+          },
+          "rationale": "Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 5, \"test_rigor\": 3, \"api_fit\": 4, \"docs_quality\": 5, \"novelty\": 3, \"persona_fidelity\": 5}, \"rationale\": \"Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 1,
+          "scores": {
+            "correctness": 2,
+            "test_rigor": 2,
+            "api_fit": 2,
+            "docs_quality": 5,
+            "novelty": 2,
+            "persona_fidelity": 4
+          },
+          "rationale": "Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 2, \"test_rigor\": 2, \"api_fit\": 2, \"docs_quality\": 5, \"novelty\": 2, \"persona_fidelity\": 4}, \"rationale\": \"Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 2,
+          "scores": {
+            "correctness": 3,
+            "test_rigor": 2,
+            "api_fit": 3,
+            "docs_quality": 5,
+            "novelty": 5,
+            "persona_fidelity": 3
+          },
+          "rationale": "Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 3, \"test_rigor\": 2, \"api_fit\": 3, \"docs_quality\": 5, \"novelty\": 5, \"persona_fidelity\": 3}, \"rationale\": \"Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pr": 3,
+      "handle": "mit-undergrad",
+      "layer": "trust",
+      "title": "[Hackathon] mit-undergrad: EigenTrust plugin for the trust layer",
+      "author": "mariagorskikh",
+      "head_sha": "0a1b071f641ecfd192a0e949807ad4678776a43d",
+      "head_ref": "hackathon/mit-undergrad-eigentrust",
+      "model": "mock:claude-opus-4-7",
+      "rubric_version": 1,
+      "diff_truncated": false,
+      "scores": {
+        "correctness": 2.0,
+        "test_rigor": 3.0,
+        "api_fit": 3.0,
+        "docs_quality": 4.0,
+        "novelty": 4.0,
+        "persona_fidelity": 3.0
+      },
+      "median": 19.0,
+      "consensus": "PR #3 from the mit-undergrad persona scored 19.0/30 across 3 judges, with strongest dimensions docs_quality (4.0) and novelty (4.0). Judges flagged correctness (2.0) and test_rigor (3.0) as the weakest areas. Lead judge summary: \"Mock judge 1: deterministic synthetic score.\"",
+      "judges": [
+        {
+          "judge_id": 0,
+          "scores": {
+            "correctness": 2,
+            "test_rigor": 3,
+            "api_fit": 3,
+            "docs_quality": 4,
+            "novelty": 3,
+            "persona_fidelity": 3
+          },
+          "rationale": "Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 2, \"test_rigor\": 3, \"api_fit\": 3, \"docs_quality\": 4, \"novelty\": 3, \"persona_fidelity\": 3}, \"rationale\": \"Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 1,
+          "scores": {
+            "correctness": 4,
+            "test_rigor": 2,
+            "api_fit": 5,
+            "docs_quality": 4,
+            "novelty": 5,
+            "persona_fidelity": 4
+          },
+          "rationale": "Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 4, \"test_rigor\": 2, \"api_fit\": 5, \"docs_quality\": 4, \"novelty\": 5, \"persona_fidelity\": 4}, \"rationale\": \"Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 2,
+          "scores": {
+            "correctness": 2,
+            "test_rigor": 5,
+            "api_fit": 3,
+            "docs_quality": 2,
+            "novelty": 4,
+            "persona_fidelity": 3
+          },
+          "rationale": "Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 2, \"test_rigor\": 5, \"api_fit\": 3, \"docs_quality\": 2, \"novelty\": 4, \"persona_fidelity\": 3}, \"rationale\": \"Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pr": 4,
+      "handle": "openai-llm",
+      "layer": "memory",
+      "title": "[Hackathon] openai-llm: semantic memory plugin (recall + TTL + LRU)",
+      "author": "mariagorskikh",
+      "head_sha": "cedd3e04c5d86508aaab3d5ed9f2bf1e051486e8",
+      "head_ref": "hackathon/openai-llm-semantic-memory",
+      "model": "mock:claude-opus-4-7",
+      "rubric_version": 1,
+      "diff_truncated": false,
+      "scores": {
+        "correctness": 4.0,
+        "test_rigor": 3.0,
+        "api_fit": 4.0,
+        "docs_quality": 4.0,
+        "novelty": 3.0,
+        "persona_fidelity": 3.0
+      },
+      "median": 22.0,
+      "consensus": "PR #4 from the openai-llm persona scored 21.0/30 across 3 judges, with strongest dimensions correctness (4.0) and api_fit (4.0). Judges flagged test_rigor (3.0) and novelty (3.0) as the weakest areas. Lead judge summary: \"Mock judge 0: deterministic synthetic score.\"",
+      "judges": [
+        {
+          "judge_id": 0,
+          "scores": {
+            "correctness": 5,
+            "test_rigor": 3,
+            "api_fit": 4,
+            "docs_quality": 4,
+            "novelty": 4,
+            "persona_fidelity": 3
+          },
+          "rationale": "Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 5, \"test_rigor\": 3, \"api_fit\": 4, \"docs_quality\": 4, \"novelty\": 4, \"persona_fidelity\": 3}, \"rationale\": \"Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 1,
+          "scores": {
+            "correctness": 4,
+            "test_rigor": 2,
+            "api_fit": 4,
+            "docs_quality": 2,
+            "novelty": 2,
+            "persona_fidelity": 3
+          },
+          "rationale": "Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 4, \"test_rigor\": 2, \"api_fit\": 4, \"docs_quality\": 2, \"novelty\": 2, \"persona_fidelity\": 3}, \"rationale\": \"Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 2,
+          "scores": {
+            "correctness": 4,
+            "test_rigor": 4,
+            "api_fit": 3,
+            "docs_quality": 4,
+            "novelty": 3,
+            "persona_fidelity": 4
+          },
+          "rationale": "Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 4, \"test_rigor\": 4, \"api_fit\": 3, \"docs_quality\": 4, \"novelty\": 3, \"persona_fidelity\": 4}, \"rationale\": \"Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pr": 5,
+      "handle": "cmu-robotics",
+      "layer": "coordination",
+      "title": "[Hackathon] cmu-robotics: sealed-bid auction coordination plugin (first-price + Vickrey)",
+      "author": "mariagorskikh",
+      "head_sha": "d94772e0c817b48ec90fcac4760bc612c807c014",
+      "head_ref": "hackathon/cmu-robotics-sealed-bid-coordination",
+      "model": "mock:claude-opus-4-7",
+      "rubric_version": 1,
+      "diff_truncated": false,
+      "scores": {
+        "correctness": 3.0,
+        "test_rigor": 5.0,
+        "api_fit": 3.0,
+        "docs_quality": 5.0,
+        "novelty": 4.0,
+        "persona_fidelity": 4.0
+      },
+      "median": 22.0,
+      "consensus": "PR #5 from the cmu-robotics persona scored 24.0/30 across 3 judges, with strongest dimensions test_rigor (5.0) and docs_quality (5.0). Judges flagged correctness (3.0) and api_fit (3.0) as the weakest areas. Lead judge summary: \"Mock judge 1: deterministic synthetic score.\"",
+      "judges": [
+        {
+          "judge_id": 0,
+          "scores": {
+            "correctness": 3,
+            "test_rigor": 5,
+            "api_fit": 2,
+            "docs_quality": 5,
+            "novelty": 3,
+            "persona_fidelity": 4
+          },
+          "rationale": "Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 3, \"test_rigor\": 5, \"api_fit\": 2, \"docs_quality\": 5, \"novelty\": 3, \"persona_fidelity\": 4}, \"rationale\": \"Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 1,
+          "scores": {
+            "correctness": 3,
+            "test_rigor": 5,
+            "api_fit": 5,
+            "docs_quality": 3,
+            "novelty": 4,
+            "persona_fidelity": 5
+          },
+          "rationale": "Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 3, \"test_rigor\": 5, \"api_fit\": 5, \"docs_quality\": 3, \"novelty\": 4, \"persona_fidelity\": 5}, \"rationale\": \"Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 2,
+          "scores": {
+            "correctness": 3,
+            "test_rigor": 4,
+            "api_fit": 3,
+            "docs_quality": 5,
+            "novelty": 4,
+            "persona_fidelity": 2
+          },
+          "rationale": "Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 3, \"test_rigor\": 4, \"api_fit\": 3, \"docs_quality\": 5, \"novelty\": 4, \"persona_fidelity\": 2}, \"rationale\": \"Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pr": 6,
+      "handle": "stanford-ml-phd",
+      "layer": "trust",
+      "title": "[Hackathon] stanford-ml-phd: EigenTrust plugin for the trust layer",
+      "author": "mariagorskikh",
+      "head_sha": "cb9225fe7d0476baef09bc9acc0b69398fb3f936",
+      "head_ref": "hackathon/stanford-ml-phd-eigentrust",
+      "model": "mock:claude-opus-4-7",
+      "rubric_version": 1,
+      "diff_truncated": false,
+      "scores": {
+        "correctness": 4.0,
+        "test_rigor": 2.0,
+        "api_fit": 5.0,
+        "docs_quality": 3.0,
+        "novelty": 5.0,
+        "persona_fidelity": 4.0
+      },
+      "median": 23.0,
+      "consensus": "PR #6 from the stanford-ml-phd persona scored 23.0/30 across 3 judges, with strongest dimensions api_fit (5.0) and novelty (5.0). Judges flagged test_rigor (2.0) and docs_quality (3.0) as the weakest areas. Lead judge summary: \"Mock judge 0: deterministic synthetic score.\"",
+      "judges": [
+        {
+          "judge_id": 0,
+          "scores": {
+            "correctness": 4,
+            "test_rigor": 4,
+            "api_fit": 5,
+            "docs_quality": 5,
+            "novelty": 5,
+            "persona_fidelity": 4
+          },
+          "rationale": "Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 4, \"test_rigor\": 4, \"api_fit\": 5, \"docs_quality\": 5, \"novelty\": 5, \"persona_fidelity\": 4}, \"rationale\": \"Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 1,
+          "scores": {
+            "correctness": 5,
+            "test_rigor": 2,
+            "api_fit": 5,
+            "docs_quality": 3,
+            "novelty": 5,
+            "persona_fidelity": 3
+          },
+          "rationale": "Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 5, \"test_rigor\": 2, \"api_fit\": 5, \"docs_quality\": 3, \"novelty\": 5, \"persona_fidelity\": 3}, \"rationale\": \"Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 2,
+          "scores": {
+            "correctness": 2,
+            "test_rigor": 2,
+            "api_fit": 4,
+            "docs_quality": 2,
+            "novelty": 5,
+            "persona_fidelity": 4
+          },
+          "rationale": "Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 2, \"test_rigor\": 2, \"api_fit\": 4, \"docs_quality\": 2, \"novelty\": 5, \"persona_fidelity\": 4}, \"rationale\": \"Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pr": 7,
+      "handle": "coinbase-crypto",
+      "layer": "payments",
+      "title": "[Hackathon] coinbase-crypto: htlc_escrow payments plugin (hash- & time-locked conditional payments)",
+      "author": "mariagorskikh",
+      "head_sha": "56514b86c461a34234ba1185c46d24ed6422626a",
+      "head_ref": "hackathon/coinbase-crypto-htlc-escrow",
+      "model": "mock:claude-opus-4-7",
+      "rubric_version": 1,
+      "diff_truncated": false,
+      "scores": {
+        "correctness": 4.0,
+        "test_rigor": 3.0,
+        "api_fit": 3.0,
+        "docs_quality": 3.0,
+        "novelty": 4.0,
+        "persona_fidelity": 5.0
+      },
+      "median": 22.0,
+      "consensus": "PR #7 from the coinbase-crypto persona scored 22.0/30 across 3 judges, with strongest dimensions persona_fidelity (5.0) and correctness (4.0). Judges flagged test_rigor (3.0) and api_fit (3.0) as the weakest areas. Lead judge summary: \"Mock judge 0: deterministic synthetic score.\"",
+      "judges": [
+        {
+          "judge_id": 0,
+          "scores": {
+            "correctness": 2,
+            "test_rigor": 5,
+            "api_fit": 5,
+            "docs_quality": 4,
+            "novelty": 4,
+            "persona_fidelity": 5
+          },
+          "rationale": "Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 2, \"test_rigor\": 5, \"api_fit\": 5, \"docs_quality\": 4, \"novelty\": 4, \"persona_fidelity\": 5}, \"rationale\": \"Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 1,
+          "scores": {
+            "correctness": 4,
+            "test_rigor": 3,
+            "api_fit": 2,
+            "docs_quality": 2,
+            "novelty": 3,
+            "persona_fidelity": 5
+          },
+          "rationale": "Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 4, \"test_rigor\": 3, \"api_fit\": 2, \"docs_quality\": 2, \"novelty\": 3, \"persona_fidelity\": 5}, \"rationale\": \"Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 2,
+          "scores": {
+            "correctness": 5,
+            "test_rigor": 2,
+            "api_fit": 3,
+            "docs_quality": 3,
+            "novelty": 5,
+            "persona_fidelity": 4
+          },
+          "rationale": "Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 5, \"test_rigor\": 2, \"api_fit\": 3, \"docs_quality\": 3, \"novelty\": 5, \"persona_fidelity\": 4}, \"rationale\": \"Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pr": 8,
+      "handle": "linux-kernel",
+      "layer": "transport",
+      "title": "[Hackathon] linux-kernel: per-hop latency models for the in-memory transport",
+      "author": "mariagorskikh",
+      "head_sha": "275c2bd2effe0733ea7e026f9430bd0c971a87e7",
+      "head_ref": "hackathon/linux-kernel-latency-transport",
+      "model": "mock:claude-opus-4-7",
+      "rubric_version": 1,
+      "diff_truncated": false,
+      "scores": {
+        "correctness": 3.0,
+        "test_rigor": 5.0,
+        "api_fit": 3.0,
+        "docs_quality": 5.0,
+        "novelty": 5.0,
+        "persona_fidelity": 3.0
+      },
+      "median": 24.0,
+      "consensus": "PR #8 from the linux-kernel persona scored 24.0/30 across 3 judges, with strongest dimensions test_rigor (5.0) and docs_quality (5.0). Judges flagged correctness (3.0) and api_fit (3.0) as the weakest areas. Lead judge summary: \"Mock judge 2: deterministic synthetic score.\"",
+      "judges": [
+        {
+          "judge_id": 0,
+          "scores": {
+            "correctness": 3,
+            "test_rigor": 3,
+            "api_fit": 5,
+            "docs_quality": 3,
+            "novelty": 5,
+            "persona_fidelity": 2
+          },
+          "rationale": "Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 3, \"test_rigor\": 3, \"api_fit\": 5, \"docs_quality\": 3, \"novelty\": 5, \"persona_fidelity\": 2}, \"rationale\": \"Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 1,
+          "scores": {
+            "correctness": 5,
+            "test_rigor": 5,
+            "api_fit": 3,
+            "docs_quality": 5,
+            "novelty": 3,
+            "persona_fidelity": 3
+          },
+          "rationale": "Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 5, \"test_rigor\": 5, \"api_fit\": 3, \"docs_quality\": 5, \"novelty\": 3, \"persona_fidelity\": 3}, \"rationale\": \"Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 2,
+          "scores": {
+            "correctness": 3,
+            "test_rigor": 5,
+            "api_fit": 2,
+            "docs_quality": 5,
+            "novelty": 5,
+            "persona_fidelity": 5
+          },
+          "rationale": "Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 3, \"test_rigor\": 5, \"api_fit\": 2, \"docs_quality\": 5, \"novelty\": 5, \"persona_fidelity\": 5}, \"rationale\": \"Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pr": 9,
+      "handle": "cybersec-blackhat",
+      "layer": "auth",
+      "title": "[Hackathon] cybersec-blackhat: dpop_jwt auth plugin + security validators",
+      "author": "mariagorskikh",
+      "head_sha": "2e638bf89f8037d08f9d0f7dc2f3c46ff1598c84",
+      "head_ref": "hackathon/cybersec-blackhat-dpop-auth",
+      "model": "mock:claude-opus-4-7",
+      "rubric_version": 1,
+      "diff_truncated": false,
+      "scores": {
+        "correctness": 3.0,
+        "test_rigor": 4.0,
+        "api_fit": 4.0,
+        "docs_quality": 3.0,
+        "novelty": 3.0,
+        "persona_fidelity": 4.0
+      },
+      "median": 20.0,
+      "consensus": "PR #9 from the cybersec-blackhat persona scored 21.0/30 across 3 judges, with strongest dimensions test_rigor (4.0) and api_fit (4.0). Judges flagged correctness (3.0) and docs_quality (3.0) as the weakest areas. Lead judge summary: \"Mock judge 0: deterministic synthetic score.\"",
+      "judges": [
+        {
+          "judge_id": 0,
+          "scores": {
+            "correctness": 5,
+            "test_rigor": 2,
+            "api_fit": 5,
+            "docs_quality": 3,
+            "novelty": 3,
+            "persona_fidelity": 4
+          },
+          "rationale": "Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 5, \"test_rigor\": 2, \"api_fit\": 5, \"docs_quality\": 3, \"novelty\": 3, \"persona_fidelity\": 4}, \"rationale\": \"Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 1,
+          "scores": {
+            "correctness": 3,
+            "test_rigor": 4,
+            "api_fit": 4,
+            "docs_quality": 3,
+            "novelty": 2,
+            "persona_fidelity": 3
+          },
+          "rationale": "Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 3, \"test_rigor\": 4, \"api_fit\": 4, \"docs_quality\": 3, \"novelty\": 2, \"persona_fidelity\": 3}, \"rationale\": \"Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 2,
+          "scores": {
+            "correctness": 3,
+            "test_rigor": 4,
+            "api_fit": 3,
+            "docs_quality": 2,
+            "novelty": 4,
+            "persona_fidelity": 4
+          },
+          "rationale": "Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 3, \"test_rigor\": 4, \"api_fit\": 3, \"docs_quality\": 2, \"novelty\": 4, \"persona_fidelity\": 4}, \"rationale\": \"Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pr": 10,
+      "handle": "meta-backend",
+      "layer": "transport",
+      "title": "[Hackathon] meta-backend: realistic transport plugin (latency, jitter, queueing, loss)",
+      "author": "mariagorskikh",
+      "head_sha": "cb6c1dacb56d1adbcd4cc82761ceec8fbc00eb32",
+      "head_ref": "hackathon/meta-backend-realistic-transport",
+      "model": "mock:claude-opus-4-7",
+      "rubric_version": 1,
+      "diff_truncated": false,
+      "scores": {
+        "correctness": 3.0,
+        "test_rigor": 3.0,
+        "api_fit": 3.0,
+        "docs_quality": 4.0,
+        "novelty": 3.0,
+        "persona_fidelity": 5.0
+      },
+      "median": 19.0,
+      "consensus": "PR #10 from the meta-backend persona scored 21.0/30 across 3 judges, with strongest dimensions persona_fidelity (5.0) and docs_quality (4.0). Judges flagged correctness (3.0) and test_rigor (3.0) as the weakest areas. Lead judge summary: \"Mock judge 0: deterministic synthetic score.\"",
+      "judges": [
+        {
+          "judge_id": 0,
+          "scores": {
+            "correctness": 3,
+            "test_rigor": 5,
+            "api_fit": 4,
+            "docs_quality": 4,
+            "novelty": 5,
+            "persona_fidelity": 5
+          },
+          "rationale": "Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 3, \"test_rigor\": 5, \"api_fit\": 4, \"docs_quality\": 4, \"novelty\": 5, \"persona_fidelity\": 5}, \"rationale\": \"Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 1,
+          "scores": {
+            "correctness": 5,
+            "test_rigor": 2,
+            "api_fit": 3,
+            "docs_quality": 2,
+            "novelty": 2,
+            "persona_fidelity": 5
+          },
+          "rationale": "Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 5, \"test_rigor\": 2, \"api_fit\": 3, \"docs_quality\": 2, \"novelty\": 2, \"persona_fidelity\": 5}, \"rationale\": \"Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 2,
+          "scores": {
+            "correctness": 2,
+            "test_rigor": 3,
+            "api_fit": 2,
+            "docs_quality": 4,
+            "novelty": 3,
+            "persona_fidelity": 3
+          },
+          "rationale": "Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 2, \"test_rigor\": 3, \"api_fit\": 2, \"docs_quality\": 4, \"novelty\": 3, \"persona_fidelity\": 3}, \"rationale\": \"Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        }
+      ]
+    },
+    {
+      "pr": 11,
+      "handle": "google-staff",
+      "layer": "transport",
+      "title": "[Hackathon] google-staff: netem transport + tail-latency metrics + SLO validators",
+      "author": "mariagorskikh",
+      "head_sha": "cae88400b6177277d5fe824fa9f0283b852402f6",
+      "head_ref": "hackathon/google-staff-netem-transport",
+      "model": "mock:claude-opus-4-7",
+      "rubric_version": 1,
+      "diff_truncated": false,
+      "scores": {
+        "correctness": 2.0,
+        "test_rigor": 5.0,
+        "api_fit": 5.0,
+        "docs_quality": 3.0,
+        "novelty": 2.0,
+        "persona_fidelity": 3.0
+      },
+      "median": 19.0,
+      "consensus": "PR #11 from the google-staff persona scored 20.0/30 across 3 judges, with strongest dimensions test_rigor (5.0) and api_fit (5.0). Judges flagged correctness (2.0) and novelty (2.0) as the weakest areas. Lead judge summary: \"Mock judge 1: deterministic synthetic score.\"",
+      "judges": [
+        {
+          "judge_id": 0,
+          "scores": {
+            "correctness": 4,
+            "test_rigor": 3,
+            "api_fit": 5,
+            "docs_quality": 2,
+            "novelty": 2,
+            "persona_fidelity": 3
+          },
+          "rationale": "Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 4, \"test_rigor\": 3, \"api_fit\": 5, \"docs_quality\": 2, \"novelty\": 2, \"persona_fidelity\": 3}, \"rationale\": \"Mock judge 0: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 1,
+          "scores": {
+            "correctness": 2,
+            "test_rigor": 5,
+            "api_fit": 5,
+            "docs_quality": 3,
+            "novelty": 5,
+            "persona_fidelity": 5
+          },
+          "rationale": "Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 2, \"test_rigor\": 5, \"api_fit\": 5, \"docs_quality\": 3, \"novelty\": 5, \"persona_fidelity\": 5}, \"rationale\": \"Mock judge 1: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        },
+        {
+          "judge_id": 2,
+          "scores": {
+            "correctness": 2,
+            "test_rigor": 5,
+            "api_fit": 2,
+            "docs_quality": 4,
+            "novelty": 2,
+            "persona_fidelity": 3
+          },
+          "rationale": "Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.",
+          "raw_response": "{\"scores\": {\"correctness\": 2, \"test_rigor\": 5, \"api_fit\": 2, \"docs_quality\": 4, \"novelty\": 2, \"persona_fidelity\": 3}, \"rationale\": \"Mock judge 2: deterministic synthetic score. This rationale exists only because ANTHROPIC_API_KEY was unset or --mock was passed. Re-run with a live key to replace.\"}",
+          "error": null
+        }
+      ]
+    }
+  ]
+}
