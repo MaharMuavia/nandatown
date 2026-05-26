@@ -1,0 +1,284 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# CI feedback bot.
+#
+# Triggers when the CI workflow finishes with conclusion=failure on a pull
+# request, downloads the failing job logs, extracts a short excerpt for each
+# failed check (ruff format diff, pyright errors, pytest summary), and posts
+# one comment on the PR. If the bot has already commented on this PR, the
+# comment is EDITED in place rather than appended -- keyed off the stable
+# HTML marker `<!-- ci-feedback-bot -->`.
+
+name: CI Feedback
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions:
+  pull-requests: write
+  actions: read
+  contents: read
+
+jobs:
+  comment:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.event == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download failing run logs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir -p logs
+          # The /logs endpoint returns a redirect to a zip of all job logs.
+          gh api -H "Accept: application/vnd.github+json" \
+            "repos/${REPO}/actions/runs/${RUN_ID}/logs" \
+            > logs.zip || {
+              echo "Failed to download logs; nothing to comment."
+              exit 0
+            }
+          unzip -o -q logs.zip -d logs/ || {
+              echo "Logs archive was empty or unreadable."
+              exit 0
+            }
+          ls -R logs/ | head -50
+
+      - name: Resolve pull request number
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # workflow_run carries a list of associated PRs only when the head
+          # is in the same repo. For cross-repo PRs we look them up by SHA.
+          PRS='${{ toJson(github.event.workflow_run.pull_requests) }}'
+          NUM=$(echo "$PRS" | jq -r '.[0].number // empty')
+          if [ -z "$NUM" ]; then
+            SHA='${{ github.event.workflow_run.head_sha }}'
+            NUM=$(gh api -H "Accept: application/vnd.github+json" \
+              "repos/${REPO}/commits/${SHA}/pulls" \
+              --jq '.[0].number // empty')
+          fi
+          if [ -z "$NUM" ]; then
+            echo "No PR associated with this workflow run; skipping."
+            echo "number=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "number=$NUM" >> "$GITHUB_OUTPUT"
+
+      - name: Extract per-check failure excerpts
+        if: steps.pr.outputs.number != ''
+        id: extract
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import os
+          import pathlib
+          import re
+
+          LOG_DIR = pathlib.Path("logs")
+          MAX_LINES = 40
+
+          # Identify failing checks by the directory name GitHub assigns to
+          # each job's log file. The CI workflow has three jobs: lint,
+          # typecheck, test. Each log file is named like
+          # "<job-name>/<step-number>_<step-name>.txt".
+          job_logs: dict[str, list[pathlib.Path]] = {}
+          for p in sorted(LOG_DIR.rglob("*.txt")):
+              job = p.parent.name or p.stem
+              job_logs.setdefault(job, []).append(p)
+
+          def read(p: pathlib.Path) -> str:
+              try:
+                  return p.read_text(errors="replace")
+              except OSError:
+                  return ""
+
+          def tail(text: str, n: int = MAX_LINES) -> str:
+              lines = [ln for ln in text.splitlines() if ln.strip()]
+              return "\n".join(lines[-n:])
+
+          def strip_timestamps(text: str) -> str:
+              # GitHub prepends "2024-01-01T00:00:00.0000000Z " to every line.
+              return re.sub(
+                  r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z\s?",
+                  "",
+                  text,
+                  flags=re.MULTILINE,
+              )
+
+          def excerpt_ruff_format(text: str) -> str | None:
+              # `ruff format --check` prints "Would reformat: <file>" lines
+              # followed by a diff block per file. Grab the first ~MAX_LINES
+              # of the first diff.
+              if "Would reformat" not in text and "would be reformatted" not in text:
+                  return None
+              # Slice from the first "Would reformat" / diff marker.
+              idx = min(
+                  (text.find(m) for m in ("Would reformat", "--- ") if text.find(m) != -1),
+                  default=-1,
+              )
+              snippet = text[idx:] if idx >= 0 else text
+              return tail(snippet)
+
+          def excerpt_ruff_check(text: str) -> str | None:
+              if "Found " not in text and "error:" not in text.lower():
+                  return None
+              return tail(text)
+
+          def excerpt_pyright(text: str) -> str | None:
+              # Pyright lines look like "  /path/file.py:12:34 - error: ..."
+              err_lines = [
+                  ln for ln in text.splitlines()
+                  if re.search(r" - (error|warning):", ln)
+              ]
+              if not err_lines:
+                  if "error" not in text.lower():
+                      return None
+                  return tail(text)
+              header = next(
+                  (ln for ln in text.splitlines()
+                   if re.search(r"\d+ errors?, \d+ warnings?", ln)),
+                  "",
+              )
+              body = "\n".join(err_lines[:MAX_LINES - 1])
+              return (body + ("\n" + header if header else "")).strip()
+
+          def excerpt_pytest(text: str) -> str | None:
+              # pytest's failure summary lives between "FAILED" / "= FAILURES ="
+              # and the trailing "= short test summary info =" block.
+              m = re.search(r"=+ FAILURES =+(.*)", text, flags=re.DOTALL)
+              if m:
+                  block = m.group(0)
+                  # Prefer the short summary if present.
+                  summ = re.search(
+                      r"=+ short test summary info =+(.*?)(?:=+ \d+ failed|$)",
+                      block,
+                      flags=re.DOTALL,
+                  )
+                  if summ:
+                      return tail(summ.group(0))
+                  return tail(block)
+              if "FAILED" in text or "ERROR" in text:
+                  return tail(text)
+              return None
+
+          REPRO = {
+              "ruff-format": "uv run ruff format --check .   # to fix: uv run ruff format .",
+              "ruff-check": "uv run ruff check .             # to fix: uv run ruff check --fix .",
+              "pyright": "uv run pyright",
+              "pytest": "uv run pytest -v",
+          }
+          DISPLAY = {
+              "ruff-format": "ruff format --check",
+              "ruff-check": "ruff check",
+              "pyright": "pyright (strict)",
+              "pytest": "pytest",
+          }
+
+          sections: list[str] = []
+          for job, files in job_logs.items():
+              combined = strip_timestamps("\n".join(read(p) for p in files))
+              # Only emit sections for jobs that clearly failed. We rely on
+              # the presence of an excerpt to decide.
+              candidates: list[tuple[str, str]] = []
+              # Order matters: format-check first because its output is the
+              # most unambiguous.
+              fmt = excerpt_ruff_format(combined)
+              if fmt:
+                  candidates.append(("ruff-format", fmt))
+              if not fmt:
+                  chk = excerpt_ruff_check(combined)
+                  # Heuristic: only call it a ruff-check failure when ruff
+                  # actually ran (avoid double-flagging pytest output that
+                  # mentions "error:").
+                  if chk and ("ruff" in combined.lower() or "Found " in combined):
+                      candidates.append(("ruff-check", chk))
+              pyr = excerpt_pyright(combined)
+              if pyr and "pyright" in combined.lower():
+                  candidates.append(("pyright", pyr))
+              pyt = excerpt_pytest(combined)
+              if pyt and ("pytest" in combined.lower() or "FAILED" in combined):
+                  candidates.append(("pytest", pyt))
+
+              for key, snippet in candidates:
+                  sections.append(
+                      f"### {DISPLAY[key]} (job: `{job}`)\n\n"
+                      f"<details><summary>error excerpt</summary>\n\n"
+                      f"```\n{snippet}\n```\n\n"
+                      f"</details>\n\n"
+                      f"**Reproduce locally:**\n```bash\n{REPRO[key]}\n```\n"
+                  )
+
+          if not sections:
+              sections.append(
+                  "CI failed but no recognised ruff / pyright / pytest "
+                  "excerpt was found in the logs. Open the run for details.\n"
+              )
+
+          body = "\n".join(sections)
+          # GitHub comment cap is ~65536 chars; we are well under but trim
+          # defensively.
+          if len(body) > 60000:
+              body = body[:60000] + "\n\n_(truncated)_"
+
+          out = pathlib.Path("comment-body.md")
+          out.write_text(body)
+          print(f"Wrote {out} ({len(body)} chars, {len(sections)} sections).")
+          PY
+
+      - name: Post or edit PR comment (idempotent)
+        if: steps.pr.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          MARKER='<!-- ci-feedback-bot -->'
+          BODY_FILE=comment-body.md
+          [ -s "$BODY_FILE" ] || echo "(no excerpt available)" > "$BODY_FILE"
+
+          # Assemble the final comment body with the stable marker, a header,
+          # and a footer pointing at CONTRIBUTING.md.
+          {
+            printf '%s\n' "$MARKER"
+            printf '## CI failed on `%s`\n\n' "$HEAD_SHA"
+            printf 'The CI workflow reported `failure`. Excerpts below; full logs: %s\n\n' "$RUN_URL"
+            cat "$BODY_FILE"
+            printf '\n\n---\n'
+            printf '**Before you push next time**, run the full local CI sequence:\n\n'
+            printf '```bash\nmake ci-local\n```\n\n'
+            printf 'See the [Definition of Done](https://github.com/%s/blob/main/CONTRIBUTING.md#definition-of-done) for the five commands every contributor MUST run before pushing.\n' "$REPO"
+            printf '\n<sub>This comment is updated in place by `.github/workflows/ci-feedback.yml` on every failing CI run for this PR.</sub>\n'
+          } > final-comment.md
+
+          # Find an existing bot comment via the stable HTML marker.
+          EXISTING_ID=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            --paginate \
+            "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            --jq "[.[] | select(.body | contains(\"${MARKER}\"))] | .[0].id // empty")
+
+          if [ -n "$EXISTING_ID" ]; then
+            echo "Editing existing comment id=$EXISTING_ID"
+            gh api \
+              --method PATCH \
+              -H "Accept: application/vnd.github+json" \
+              "repos/${REPO}/issues/comments/${EXISTING_ID}" \
+              -F body=@final-comment.md > /dev/null
+          else
+            echo "Posting new comment on PR #${PR_NUMBER}"
+            gh api \
+              --method POST \
+              -H "Accept: application/vnd.github+json" \
+              "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+              -F body=@final-comment.md > /dev/null
+          fi

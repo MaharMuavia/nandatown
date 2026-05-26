@@ -1,5 +1,60 @@
 # Contributing to NEST
 
+## Definition of Done
+
+A change is **not done** until all five of the following commands exit `0` on
+your machine, in order. CI runs the exact same sequence; running it locally
+first is the difference between a green PR and a red one.
+
+```bash
+uv sync
+uv run ruff check .
+uv run ruff format --check .
+uv run pyright
+uv run pytest -v
+```
+
+The single-command shortcut is:
+
+```bash
+make ci-local
+```
+
+`make ci-local` runs the five commands above in order and hard-fails on the
+first red command. Run it before every `git push`.
+
+**Why each command matters:**
+
+1. **`uv sync`** — installs/refreshes the locked dependency set. If this fails,
+   nothing below it can be trusted. Always run it first so you are testing
+   against the same versions CI is.
+2. **`uv run ruff check .`** — lint pass (E, F, I, N, W, UP, B, A, SIM, TCH).
+   Catches dead imports, undefined names, suspicious comparisons, etc. Most
+   agents already run this and call it "the tests"; it is **not** the tests.
+3. **`uv run ruff format --check .`** — verifies formatting **without
+   modifying files**. This is the single most common reason "passing locally"
+   PRs go red in CI: contributors run `ruff check` but skip the format check.
+   If this fails, run `uv run ruff format .` to fix it, then re-run the check.
+4. **`uv run pyright`** — strict-mode type checker (see `[tool.pyright]` in
+   `pyproject.toml`). Strict mode is enforced repository-wide; new code must
+   be fully annotated. This is the second most common cause of "passes
+   locally" PRs failing CI.
+5. **`uv run pytest -v`** — the unit + property test suite (Hypothesis is in
+   use). All packages under `packages/` are collected via the workspace
+   `pyproject.toml`'s `testpaths`.
+
+If any of the five fails, fix the underlying issue. Do **not** push and rely
+on CI to tell you what is wrong — CI is a backstop, not a development loop.
+
+For an even faster feedback loop, install the pre-commit hooks so ruff and
+pyright run on every `git commit`:
+
+```bash
+make hooks
+```
+
+---
+
 Thank you for your interest in contributing to NEST. This document covers development setup, coding standards, and how to add scenarios and plugins.
 
 ## Development Setup

@@ -29,6 +29,11 @@ nest run marketplace
 
 That's the whole "hello world". No clone, no path, no setup.
 
+> **Before you push** (contributors only): run `make ci-local`. It runs the
+> exact CI command sequence — `uv sync`, `ruff check`, `ruff format --check`,
+> `pyright`, `pytest -v` — and hard-fails on the first red command. See the
+> [Definition of Done](CONTRIBUTING.md#definition-of-done) in `CONTRIBUTING.md`.
+
 ---
 
 ## Table of Contents

@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Pre-commit hook configuration for NEST.
+#
+# Mirrors what .github/workflows/ci.yml enforces, so violations are caught at
+# commit time instead of after a push. Local commits MAY auto-fix; CI runs of
+# this config (e.g. via `pre-commit run --all-files` with no diff-back) MUST
+# remain check-only -- the hooks below are configured so that the in-CI path
+# does NOT mutate files (see the dedicated pyright + check-only ruff format
+# stage and the `pass_filenames` / staged-files-only behaviour of ruff).
+#
+# Versions are pinned to match what `uv sync` resolves on main as of this
+# commit (ruff 0.15.14, pyright 1.1.409). Bump in lockstep with pyproject.toml.
+
+default_install_hook_types: [pre-commit]
+default_stages: [pre-commit]
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.14
+    hooks:
+      # Lint with auto-fix on local commits.
+      - id: ruff
+        args: [--fix]
+      # Format with auto-fix on local commits.
+      - id: ruff-format
+
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.409
+    hooks:
+      - id: pyright
+        # Strict mode is configured in pyproject.toml ([tool.pyright]); we just
+        # invoke pyright and let it pick that up. No --warnings / --outputjson
+        # noise so the output matches CI exactly.
+        pass_filenames: false
+        # Run against the whole workspace -- strict-mode type errors often
+        # cross file boundaries, so checking only staged files is unreliable.
+        args: []
+        additional_dependencies: []
