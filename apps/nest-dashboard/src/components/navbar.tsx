@@ -74,7 +74,7 @@ export function Navbar() {
 
         <div className="flex items-center gap-2">
           <a
-            href="https://github.com/mariagorskikh/nest"
+            href="https://github.com/projnanda/nandatown"
             target="_blank"
             rel="noopener noreferrer"
             className="hidden sm:inline-flex items-center text-[0.85rem] font-medium text-ink-500 hover:text-ink-900 px-3 py-2 transition-colors"

@@ -51,7 +51,7 @@ export function Footer() {
 
           <FooterColumn title="Resources">
             <FooterLink href="/docs">Documentation</FooterLink>
-            <FooterLink href="https://github.com/mariagorskikh/nest" external>
+            <FooterLink href="https://github.com/projnanda/nandatown" external>
               GitHub
             </FooterLink>
             <FooterLink href="https://projectnanda.org" external>
@@ -61,13 +61,13 @@ export function Footer() {
 
           <FooterColumn title="Community">
             <FooterLink
-              href="https://github.com/mariagorskikh/nest/issues"
+              href="https://github.com/projnanda/nandatown/issues"
               external
             >
               Report an issue
             </FooterLink>
             <FooterLink
-              href="https://github.com/mariagorskikh/nest/discussions"
+              href="https://github.com/projnanda/nandatown/discussions"
               external
             >
               Discussions

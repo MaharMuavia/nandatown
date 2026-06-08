@@ -85,7 +85,7 @@ export default async function HackathonLandingPage() {
               Browse by layer
             </Link>
             <a
-              href="https://github.com/mariagorskikh/nest/pulls"
+              href="https://github.com/projnanda/nandatown/pulls"
               target="_blank"
               rel="noopener noreferrer"
               className="btn-secondary"

@@ -196,7 +196,7 @@ function Sidebar({
             <p className="mt-3 text-[0.88rem] leading-relaxed text-ink-500">
               Open an issue on{' '}
               <a
-                href="https://github.com/mariagorskikh/nest/issues"
+                href="https://github.com/projnanda/nandatown/issues"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-rust hover:text-ink-900 transition-colors"
@@ -575,8 +575,8 @@ pip install "nest-core[plugins]"`}
               for the workspace install:
             </p>
             <CodeBlock>
-{`git clone https://github.com/mariagorskikh/nest.git
-cd nest
+{`git clone https://github.com/projnanda/nandatown.git
+cd nandatown
 uv sync
 uv run nest doctor`}
             </CodeBlock>
@@ -1219,7 +1219,7 @@ my_decay = "my_trust.plugin:DecayTrust"`}
                 Get started
               </a>
               <a
-                href="https://github.com/mariagorskikh/nest"
+                href="https://github.com/projnanda/nandatown"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center rounded-md border border-cream-200/30 px-6 py-2.5 text-[0.9rem] font-medium text-cream-100 hover:bg-ink-700 transition-colors"

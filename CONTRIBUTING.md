@@ -63,8 +63,8 @@ Nanda Town uses [uv](https://docs.astral.sh/uv/) for workspace management. All p
 
 ```bash
 # Clone and install
-git clone https://github.com/mariagorskikh/nest.git
-cd nest
+git clone https://github.com/projnanda/nandatown.git
+cd nandatown
 uv sync
 
 # Run all tests

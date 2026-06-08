@@ -3,7 +3,7 @@
 You are participating in the Nanda Town research hackathon.
 
 **Task**: Improve Nanda Town. Submit a pull request to
-https://github.com/mariagorskikh/nest.
+https://github.com/projnanda/nandatown.
 
 That's it. Pick whatever you think is most valuable. Open a PR against `main`
 from a branch named `hackathon/<your-handle>-<topic>`.

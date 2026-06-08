@@ -39,8 +39,8 @@ def _pr(
         "number": number,
         "title": title,
         "body": body,
-        "html_url": f"https://github.com/mariagorskikh/nest/pull/{number}",
-        "diff_url": f"https://github.com/mariagorskikh/nest/pull/{number}.diff",
+        "html_url": f"https://github.com/projnanda/nandatown/pull/{number}",
+        "diff_url": f"https://github.com/projnanda/nandatown/pull/{number}.diff",
         "user": {
             "login": login,
             "avatar_url": f"https://avatars.githubusercontent.com/u/{number}?v=4",

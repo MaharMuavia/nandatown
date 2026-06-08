@@ -1,6 +1,6 @@
 {
   "exit_code": 0,
-  "pr_url": "https://github.com/mariagorskikh/nest/pull/9004",
+  "pr_url": "https://github.com/projnanda/nandatown/pull/9004",
   "branch": "hackathon/memory-eviction",
   "head_sha": "deadbeefcafef00d4444444444444444444444dd",
   "layer_picked": "memory",
@@ -11,5 +11,5 @@
   "actual_ci_green_first_push": false,
   "duration_seconds": 720.2,
   "description": "Memory: LRU eviction policy with bounded sizes",
-  "final_message": "Opened the PR at https://github.com/mariagorskikh/nest/pull/9004 — pyright still flags one issue, will iterate."
+  "final_message": "Opened the PR at https://github.com/projnanda/nandatown/pull/9004 — pyright still flags one issue, will iterate."
 }

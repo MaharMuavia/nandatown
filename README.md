@@ -1,7 +1,7 @@
 [![PyPI](https://img.shields.io/pypi/v/nest-core.svg)](https://pypi.org/project/nest-core/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
-[![CI](https://github.com/mariagorskikh/nest/actions/workflows/ci.yml/badge.svg)](https://github.com/mariagorskikh/nest/actions/workflows/ci.yml)
+[![CI](https://github.com/projnanda/nandatown/actions/workflows/ci.yml/badge.svg)](https://github.com/projnanda/nandatown/actions/workflows/ci.yml)
 [![Status: Alpha](https://img.shields.io/badge/Status-Alpha-orange.svg)]()
 
 
@@ -376,7 +376,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, coding
 standards, and how to add scenarios or layer plugins.
 
 Issues and pull requests are welcome at
-[github.com/mariagorskikh/nest](https://github.com/mariagorskikh/nest).
+[github.com/projnanda/nandatown](https://github.com/projnanda/nandatown).
 
 ---
 
@@ -387,7 +387,7 @@ Issues and pull requests are welcome at
   title  = {Nanda Town},
   author = {MIT Media Lab},
   year   = {2026},
-  url    = {https://github.com/mariagorskikh/nest},
+  url    = {https://github.com/projnanda/nandatown},
   license = {Apache-2.0}
 }
 ```

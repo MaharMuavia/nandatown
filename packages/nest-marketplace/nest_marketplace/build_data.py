@@ -30,9 +30,9 @@ from typing import Any, cast
 
 from nest_marketplace.adapter import build_dataset, load_scores, to_jsonable
 
-DEFAULT_OWNER = "mariagorskikh"
-DEFAULT_REPO = "nest"
-DEFAULT_USER_AGENT = "nest-marketplace-build/0.1 (+https://github.com/mariagorskikh/nest)"
+DEFAULT_OWNER = "projnanda"
+DEFAULT_REPO = "nandatown"
+DEFAULT_USER_AGENT = "nest-marketplace-build/0.1 (+https://github.com/projnanda/nandatown)"
 DEFAULT_TIMEOUT = 15.0
 
 

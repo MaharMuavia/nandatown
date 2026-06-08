@@ -21,8 +21,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/mariagorskikh/nest"
-Repository = "https://github.com/mariagorskikh/nest"
+Homepage = "https://github.com/projnanda/nandatown"
+Repository = "https://github.com/projnanda/nandatown"
 
 [build-system]
 requires = ["hatchling"]

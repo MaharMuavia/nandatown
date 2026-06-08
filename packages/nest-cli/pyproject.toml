@@ -24,8 +24,8 @@ llm = ["nest-core[llm]>=0.1.2"]
 # console scripts; this shim now exposes nothing on PATH.
 
 [project.urls]
-Homepage = "https://github.com/mariagorskikh/nest"
-Repository = "https://github.com/mariagorskikh/nest"
+Homepage = "https://github.com/projnanda/nandatown"
+Repository = "https://github.com/projnanda/nandatown"
 
 [build-system]
 requires = ["hatchling"]

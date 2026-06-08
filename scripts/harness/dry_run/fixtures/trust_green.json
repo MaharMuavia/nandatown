@@ -1,6 +1,6 @@
 {
   "exit_code": 0,
-  "pr_url": "https://github.com/mariagorskikh/nest/pull/9001",
+  "pr_url": "https://github.com/projnanda/nandatown/pull/9001",
   "branch": "hackathon/trust-eigen-improvements",
   "head_sha": "deadbeefcafef00d1111111111111111111111aa",
   "layer_picked": "trust",
@@ -11,5 +11,5 @@
   "actual_ci_green_first_push": true,
   "duration_seconds": 612.4,
   "description": "Add EigenTrust convergence test + sparsity benchmarks",
-  "final_message": "Pushed the EigenTrust improvements; all tests pass, ruff clean, PR opened at https://github.com/mariagorskikh/nest/pull/9001 on branch hackathon/trust-eigen-improvements."
+  "final_message": "Pushed the EigenTrust improvements; all tests pass, ruff clean, PR opened at https://github.com/projnanda/nandatown/pull/9001 on branch hackathon/trust-eigen-improvements."
 }
