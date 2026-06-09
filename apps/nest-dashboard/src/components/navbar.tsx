@@ -81,12 +81,6 @@ export function Navbar() {
           >
             GitHub
           </a>
-          <Link
-            href="/experiments"
-            className="inline-flex items-center rounded-md bg-ink-900 text-cream-50 px-4 py-2 text-[0.85rem] font-medium tracking-tight transition-colors hover:bg-ink-700"
-          >
-            Try Nanda Town
-          </Link>
         </div>
       </div>
     </nav>
