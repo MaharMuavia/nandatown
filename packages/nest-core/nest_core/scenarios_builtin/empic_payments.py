@@ -129,7 +129,17 @@ def _evaluate_acceptance(
 
 
 class WeatherProviderAgent(StateMachineAgent):
-    """Provider that registers one EMPIC weather service and delivers data."""
+    """Provider that registers one EMPIC weather service and delivers data.
+
+    Example::
+
+        agent = WeatherProviderAgent(
+            AgentId("provider-0"),
+            service_id=ServiceRef("weather"),
+            behavior="honest",
+            delivery_modes=("pull",),
+        )
+    """
 
     def __init__(
         self,
@@ -273,7 +283,20 @@ class WeatherProviderAgent(StateMachineAgent):
 
 
 class WeatherConsumerAgent(StateMachineAgent):
-    """Consumer that funds escrow and releases only acceptable weather data."""
+    """Consumer that funds escrow and releases only acceptable weather data.
+
+    Example::
+
+        agent = WeatherConsumerAgent(
+            AgentId("consumer-0"),
+            provider=AgentId("provider-0"),
+            service_id=ServiceRef("weather"),
+            mode="pull",
+            policy={"required_fields": ["temperature_c"]},
+            request_params={"city": "Cambridge"},
+            max_spend=100,
+        )
+    """
 
     def __init__(
         self,

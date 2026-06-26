@@ -1495,6 +1495,10 @@ def validate_empic_escrow_conservation(
     This checks the EMPIC shadow ledger from audit messages by ``payment_ref``:
     consumer debits into escrow must equal provider releases plus consumer
     refunds for each funded payment, not only globally.
+
+    Example::
+
+        result = validate_empic_escrow_conservation(events)[0]
     """
     audit = _empic_audit_events(events)
     debited = _empic_amounts_by_ref(audit, "empic_escrow_debited")
@@ -1531,7 +1535,12 @@ def validate_empic_escrow_conservation(
 def validate_empic_no_release_without_accepted_delivery(
     events: list[dict[str, Any]],
 ) -> list[ValidationResult]:
-    """Provider payment release requires accepted delivery evidence."""
+    """Provider payment release requires accepted delivery evidence.
+
+    Example::
+
+        result = validate_empic_no_release_without_accepted_delivery(events)[0]
+    """
     audit = _empic_audit_events(events)
     accepted_deliveries = {
         (_empic_ref(ev), _empic_delivery_id(ev))
@@ -1572,7 +1581,12 @@ def validate_empic_no_release_without_accepted_delivery(
 def validate_empic_invalid_delivery_not_paid(
     events: list[dict[str, Any]],
 ) -> list[ValidationResult]:
-    """Rejected delivery evidence must not be credited to a provider."""
+    """Rejected delivery evidence must not be credited to a provider.
+
+    Example::
+
+        result = validate_empic_invalid_delivery_not_paid(events)[0]
+    """
     audit = _empic_audit_events(events)
     rejected = {
         (_empic_ref(ev), _empic_delivery_id(ev))
@@ -1610,7 +1624,12 @@ def validate_empic_invalid_delivery_not_paid(
 def validate_empic_delivery_policy_integrity(
     events: list[dict[str, Any]],
 ) -> list[ValidationResult]:
-    """Consumer acceptance must match delivery payload and declared policy."""
+    """Consumer acceptance must match delivery payload and declared policy.
+
+    Example::
+
+        result = validate_empic_delivery_policy_integrity(events)[0]
+    """
     audit = _empic_audit_events(events)
     deliveries = {
         (_empic_ref(ev), _empic_delivery_id(ev)): ev
@@ -1665,7 +1684,12 @@ def validate_empic_delivery_policy_integrity(
 def validate_empic_pubsub_billing_caps(
     events: list[dict[str, Any]],
 ) -> list[ValidationResult]:
-    """Pubsub releases must respect rate-per-tick, max-total, and accepted evidence."""
+    """Pubsub releases must respect rate-per-tick, max-total, and accepted evidence.
+
+    Example::
+
+        result = validate_empic_pubsub_billing_caps(events)[0]
+    """
     audit = _empic_audit_events(events)
     streams: dict[str, tuple[int, int]] = {}
     accepted: dict[str, set[str]] = defaultdict(set)
@@ -1730,7 +1754,12 @@ def validate_empic_pubsub_billing_caps(
 def validate_empic_max_spend_enforced(
     events: list[dict[str, Any]],
 ) -> list[ValidationResult]:
-    """Funded escrow amount must not exceed the consumer's declared budget."""
+    """Funded escrow amount must not exceed the consumer's declared budget.
+
+    Example::
+
+        result = validate_empic_max_spend_enforced(events)[0]
+    """
     audit = _empic_audit_events(events)
     max_spend_by_ref: dict[str, int] = {}
     violations: list[str] = []
@@ -1774,7 +1803,12 @@ def validate_empic_max_spend_enforced(
 def validate_empic_all_escrows_terminal(
     events: list[dict[str, Any]],
 ) -> list[ValidationResult]:
-    """Every funded escrow must finish with complete release/refund accounting."""
+    """Every funded escrow must finish with complete release/refund accounting.
+
+    Example::
+
+        result = validate_empic_all_escrows_terminal(events)[0]
+    """
     audit = _empic_audit_events(events)
     debited = _empic_amounts_by_ref(audit, "empic_escrow_debited")
     released = _empic_amounts_by_ref(audit, "empic_escrow_released")
@@ -1817,7 +1851,12 @@ def validate_empic_all_escrows_terminal(
 def validate_empic_no_duplicate_settlement(
     events: list[dict[str, Any]],
 ) -> list[ValidationResult]:
-    """Payment refs and delivery evidence must not be replayed for settlement."""
+    """Payment refs and delivery evidence must not be replayed for settlement.
+
+    Example::
+
+        result = validate_empic_no_duplicate_settlement(events)[0]
+    """
     audit = _empic_audit_events(events)
     debits: dict[str, int] = defaultdict(int)
     releases: dict[tuple[str, str], int] = defaultdict(int)
@@ -1873,7 +1912,12 @@ def validate_empic_no_duplicate_settlement(
 def validate_empic_provider_service_binding(
     events: list[dict[str, Any]],
 ) -> list[ValidationResult]:
-    """Payments and releases must bind to the provider registered for the service."""
+    """Payments and releases must bind to the provider registered for the service.
+
+    Example::
+
+        result = validate_empic_provider_service_binding(events)[0]
+    """
     audit = _empic_audit_events(events)
     service_provider: dict[str, str] = {}
     payment_binding: dict[str, tuple[str, str]] = {}
@@ -1939,7 +1983,12 @@ def validate_empic_provider_service_binding(
 def validate_empic_payment_participant_binding(
     events: list[dict[str, Any]],
 ) -> list[ValidationResult]:
-    """Payment refs must not change consumer, provider, service, or mode."""
+    """Payment refs must not change consumer, provider, service, or mode.
+
+    Example::
+
+        result = validate_empic_payment_participant_binding(events)[0]
+    """
     audit = _empic_audit_events(events)
     tracked_types = {
         "empic_acceptance_policy",
@@ -2041,7 +2090,12 @@ _PAYMENT_SECRET_PREFIXES = ("sk_" + "live_", "sk_" + "test_")
 def validate_empic_no_secret_material(
     events: list[dict[str, Any]],
 ) -> list[ValidationResult]:
-    """EMPIC traces must contain only replay-safe public metadata."""
+    """EMPIC traces must contain only replay-safe public metadata.
+
+    Example::
+
+        result = validate_empic_no_secret_material(events)[0]
+    """
     violations: list[str] = []
     checked = 0
 
@@ -2079,7 +2133,12 @@ def validate_empic_no_secret_material(
 def validate_empic_no_drain_after_close(
     events: list[dict[str, Any]],
 ) -> list[ValidationResult]:
-    """Pubsub streams must not release funds after close."""
+    """Pubsub streams must not release funds after close.
+
+    Example::
+
+        result = validate_empic_no_drain_after_close(events)[0]
+    """
     audit = _empic_audit_events(events)
     close_tick: dict[str, int] = {}
     violations: list[str] = []
@@ -2112,7 +2171,12 @@ def validate_empic_no_drain_after_close(
 def validate_empic_no_overbill_on_partition(
     events: list[dict[str, Any]],
 ) -> list[ValidationResult]:
-    """Pubsub streams must not release funds after a partitioned delivery edge."""
+    """Pubsub streams must not release funds after a partitioned delivery edge.
+
+    Example::
+
+        result = validate_empic_no_overbill_on_partition(events)[0]
+    """
     audit = _empic_audit_events(events)
     stream_parties: dict[str, tuple[str, str]] = {}
     partition_start: dict[tuple[str, str], int] = {}
