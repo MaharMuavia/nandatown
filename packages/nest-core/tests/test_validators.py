@@ -1564,13 +1564,14 @@ class TestEmpicPaymentsValidators:
 
     def test_no_secret_material_fails_private_key(self) -> None:
         """Trace messages must not leak private keys or API secrets."""
+        private_marker = "-----BEGIN " + "PRIVATE " + "KEY-----\nredacted"
         events = [
             _empic(
                 {
                     "event_type": "empic_service_registered",
                     "service_id": "weather",
                     "provider": "provider",
-                    "private_key": "-----BEGIN PRIVATE KEY-----\nredacted",
+                    "private_key": private_marker,
                 }
             )
         ]

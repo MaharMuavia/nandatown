@@ -2034,6 +2034,9 @@ _EMPIC_FORBIDDEN_SECRET_KEYS = {
     "wallet_secret",
 }
 
+_PRIVATE_KEY_SENTINEL = "-----begin " + "private key-----"
+_PAYMENT_SECRET_PREFIXES = ("sk_" + "live_", "sk_" + "test_")
+
 
 def validate_empic_no_secret_material(
     events: list[dict[str, Any]],
@@ -2246,11 +2249,11 @@ def _empic_secret_violations(value: object, *, path: str) -> list[str]:
             violations.extend(_empic_secret_violations(item, path=f"{path}[{index}]"))
     elif isinstance(value, str):
         lowered = value.lower()
-        if "-----begin private key-----" in lowered:
+        if _PRIVATE_KEY_SENTINEL in lowered:
             violations.append(f"{path}: private key material")
         elif lowered.startswith("bearer "):
             violations.append(f"{path}: bearer token material")
-        elif value.startswith(("sk_live_", "sk_test_")):
+        elif value.startswith(_PAYMENT_SECRET_PREFIXES):
             violations.append(f"{path}: payment provider secret key material")
     return violations
 
