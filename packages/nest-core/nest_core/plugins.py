@@ -27,6 +27,7 @@ _BUILTINS: dict[tuple[str, str], str] = {
     ("auth", "jwt"): f"{_REF}.auth.jwt_auth:JwtAuth",
     ("trust", "score_average"): f"{_REF}.trust.score_average:ScoreAverageTrust",
     ("trust", "agent_receipts"): f"{_REF}.trust.agent_receipts:AgentReceiptsTrust",
+    ("trust", "bonded_trust"): f"{_REF}.trust.bonded_trust:BondedTrust",
     ("payments", "prepaid_credits"): f"{_REF}.payments.prepaid_credits:PrepaidCredits",
     ("payments", "streaming"): f"{_REF}.payments.streaming:StreamingPayments",
     ("payments", "escrow"): f"{_REF}.payments.escrow:EscrowPayments",
