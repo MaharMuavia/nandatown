@@ -10,7 +10,7 @@ Reputation in NEST dies with the run: every trust plugin holds an in-memory
 ledger and nothing exports it, carries it, or verifies it in another trust
 domain. This plugin makes reputation **portable**. It extends the
 ``agent_receipts`` reference plugin (cross-signed receipts, corroboration
-gates, collusion-ring severance) with two new capabilities:
+gates, collusion-ring severance) with three new capabilities:
 
 1. **Export** — :meth:`ParcTrust.build_credential` wraps an agent's receipt
    ledger as a W3C-Verifiable-Credential-shaped document: a
@@ -25,6 +25,17 @@ gates, collusion-ring severance) with two new capabilities:
    receipts and rejects any divergence. *A valid signature is not admission* —
    an issuer-inflated-then-re-signed score passes proof verification and is
    still rejected on recompute divergence.
+3. **Selective disclosure** — :meth:`ParcTrust.build_presentation` reveals a
+   chosen subset of receipts, each with a **Merkle inclusion proof** against
+   the credential's signed ``behavioral_merkle_root``, and
+   :meth:`ParcTrust.verify_presentation` confirms every disclosed receipt is
+   committed under that root — plus the signed ``receipt_count`` bound on the
+   undisclosed remainder — without seeing the rest of the ledger. Disclosure
+   proves *which receipts happened*; it never recomputes scores. The
+   reputation aggregate is a whole-graph property (collusion severance needs
+   every edge), so the signed score stands — recomputing it from a
+   hand-picked subset is exactly the cherry-picking attack this split
+   forbids. Full-ledger recomputation remains :meth:`ParcTrust.admit`'s job.
 
 An inline credential carries only the subject's own receipts — a star graph —
 so it cannot reveal an N-party collusion ring (each ring member's credential
@@ -67,6 +78,7 @@ Example::
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Any, cast
 
@@ -174,6 +186,89 @@ def merkle_root(receipts: list[dict[str, Any]]) -> str:
             for i in range(0, len(level), 2)
         ]
     return level[0]
+
+
+def inclusion_proof(
+    receipts: list[dict[str, Any]],
+    *,
+    receipt: dict[str, Any],
+) -> dict[str, Any]:
+    """Merkle inclusion proof that ``receipt`` is committed by ``merkle_root(receipts)``.
+
+    Built over the exact tree :func:`merkle_root` computes — hex leaf digests
+    sorted lexicographically, parents hashing the *concatenated hex strings*,
+    odd levels duplicating the last node — so it verifies against the
+    ``behavioral_merkle_root`` a credential signs. Shape::
+
+        {"leaf_index": int, "leaf_count": int,
+         "path": [{"sibling": <hex>, "position": "left" | "right"}, ...]}
+
+    ``leaf_count`` is the total number of committed leaves: a verifier checks
+    it against the credential's signed ``receipt_count``, so a holder cannot
+    misrepresent how much ledger stays undisclosed. Raises ``ValueError`` if
+    ``receipt`` is not in ``receipts`` — a proof for an absent leaf does not
+    exist.
+
+    Example::
+
+        proof = inclusion_proof(receipts, receipt=receipts[0])
+    """
+    leaves = sorted(hashlib.sha256(ar._canonical(r)).hexdigest() for r in receipts)
+    target = hashlib.sha256(ar._canonical(receipt)).hexdigest()
+    try:
+        index = leaves.index(target)
+    except ValueError as exc:
+        raise ValueError("receipt is not present in the ledger") from exc
+
+    path: list[dict[str, str]] = []
+    level = leaves
+    node_index = index
+    while len(level) > 1:
+        if len(level) % 2 == 1:
+            level = [*level, level[-1]]
+        # An even node is the left input of its pair, so its sibling sits on
+        # the right — and vice versa.
+        position = "right" if node_index % 2 == 0 else "left"
+        path.append({"sibling": level[node_index ^ 1], "position": position})
+        level = [
+            hashlib.sha256((level[i] + level[i + 1]).encode()).hexdigest()
+            for i in range(0, len(level), 2)
+        ]
+        node_index //= 2
+    return {"leaf_index": index, "leaf_count": len(leaves), "path": path}
+
+
+def verify_inclusion(receipt: dict[str, Any], proof: dict[str, Any], root: str) -> bool:
+    """True iff ``receipt`` folds up ``proof``'s path to ``root``.
+
+    The dual of :meth:`ParcTrust.admit`'s recomputation: instead of rebuilding
+    the whole tree from every carried receipt, the verifier recomputes ONE
+    leaf and folds it up the authentication path — it never needs the rest of
+    the ledger. ``root`` is the bare hex :func:`merkle_root` returns (what
+    credentials sign as ``behavioral_merkle_root``). A tampered receipt, a
+    tampered sibling, or a foreign root all fold to a different hex and yield
+    ``False``; a structurally malformed proof is also ``False``, never an
+    exception — proofs arrive from the presenting (adversarial) side.
+
+    Example::
+
+        ok = verify_inclusion(receipt, proof, root)
+    """
+    steps = proof.get("path")
+    if not isinstance(steps, list):
+        return False
+    node = hashlib.sha256(ar._canonical(receipt)).hexdigest()
+    for step in cast("list[Any]", steps):
+        if not isinstance(step, dict):
+            return False
+        step_typed = cast("dict[str, Any]", step)
+        sibling = step_typed.get("sibling")
+        position = step_typed.get("position")
+        if not isinstance(sibling, str) or position not in ("left", "right"):
+            return False
+        pair = sibling + node if position == "left" else node + sibling
+        node = hashlib.sha256(pair.encode()).hexdigest()
+    return node == root
 
 
 def _inline_scores(receipts: list[dict[str, Any]]) -> tuple[float, float, float]:
@@ -318,6 +413,64 @@ class AdmissionResult:
     reason: str
     recomputed_score: float | None = None
     detail: str = ""
+
+
+@dataclass(frozen=True)
+class DisclosureResult:
+    """The outcome of verifying one selective-disclosure presentation.
+
+    ``ok`` is True iff the credential's proof verified and every disclosed
+    receipt checked out. ``reasons`` is empty on success, else the ordered,
+    de-duplicated snake_case failures (``malformed_presentation``,
+    ``issuer_mismatch``, ``bad_credential_proof``, ``malformed_proof``,
+    ``count_mismatch``, ``not_included``). Frozen — a verification verdict is
+    evidence, not a scratchpad.
+
+    Example::
+
+        result = DisclosureResult(ok=True)
+    """
+
+    ok: bool
+    reasons: tuple[str, ...] = ()
+    detail: str = ""
+
+
+def _disclosed_entry_reasons(entry: Any, *, root: str, receipt_count: int) -> list[str]:
+    """The typed failures of one disclosed ``{"receipt", "proof"}`` entry.
+
+    The two substantive checks are evaluated independently rather than
+    short-circuited, so a receipt from a foreign ledger still reports
+    ``not_included`` even when its ``leaf_count`` also lies.
+
+    Example::
+
+        reasons = _disclosed_entry_reasons(entry, root=root, receipt_count=2)
+    """
+    if not isinstance(entry, dict):
+        return ["malformed_presentation"]
+    entry_typed = cast("dict[str, Any]", entry)
+    receipt = entry_typed.get("receipt")
+    proof = entry_typed.get("proof")
+    if not isinstance(receipt, dict) or not isinstance(proof, dict):
+        return ["malformed_presentation"]
+    receipt_typed = cast("dict[str, Any]", receipt)
+    proof_typed = cast("dict[str, Any]", proof)
+    leaf_index = proof_typed.get("leaf_index")
+    leaf_count = proof_typed.get("leaf_count")
+    if (
+        not isinstance(leaf_index, int)
+        or not isinstance(leaf_count, int)
+        or not isinstance(proof_typed.get("path"), list)
+        or not 0 <= leaf_index < leaf_count
+    ):
+        return ["malformed_proof"]
+    reasons: list[str] = []
+    if leaf_count != receipt_count:
+        reasons.append("count_mismatch")
+    if not verify_inclusion(receipt_typed, proof_typed, root):
+        reasons.append("not_included")
+    return reasons
 
 
 # ---------------------------------------------------------------------------
@@ -585,6 +738,106 @@ class ParcTrust(ar.AgentReceiptsTrust):
         if not (issued_at <= valid_from < rotated_out):
             return "stale_key"
         return None
+
+    # -- selective disclosure -------------------------------------------------
+
+    def build_presentation(
+        self,
+        credential: dict[str, Any],
+        receipts: list[dict[str, Any]],
+        *,
+        disclose: Iterable[str],
+    ) -> dict[str, Any]:
+        """Package ``credential`` plus inclusion proofs for the chosen receipts.
+
+        ``disclose`` names receipts by ``receipt_id``; ``receipts`` is the
+        holder's full ledger — the one the credential's
+        ``behavioral_merkle_root`` commits to. The prover needs every leaf to
+        build a path; the verifier needs none of them. Disclosed entries are
+        sorted by ``receipt_id``, so identical inputs yield a byte-identical
+        presentation. Raises ``ValueError`` for a ``receipt_id`` not in
+        ``receipts`` (see :func:`inclusion_proof`).
+
+        Example::
+
+            pres = trust.build_presentation(vc, receipts, disclose=["r1", "r7"])
+        """
+        by_id = {str(r.get("receipt_id", "")): r for r in receipts}
+        disclosed: list[dict[str, Any]] = []
+        for receipt_id in sorted(set(disclose)):
+            receipt = by_id.get(receipt_id)
+            if receipt is None:
+                raise ValueError(f"receipt {receipt_id!r} is not present in the ledger")
+            disclosed.append(
+                {"receipt": receipt, "proof": inclusion_proof(receipts, receipt=receipt)}
+            )
+        return {"credential": credential, "disclosed": disclosed}
+
+    async def verify_presentation(
+        self,
+        presentation: dict[str, Any],
+        *,
+        identity: Any,
+        expected_issuer: str | None = None,
+    ) -> DisclosureResult:
+        """Verify a selective-disclosure presentation; no score is recomputed.
+
+        Gates, each with a typed reason: the presentation and its credential
+        parse (``malformed_presentation``) → the issuer matches
+        ``expected_issuer`` when one is required (``issuer_mismatch``) → the
+        credential's Ed25519 proof verifies through the SAME identity-layer
+        path as :meth:`admit`, key-rotation window enforced as-of
+        ``validFrom`` — a forged signature or a rotated-out signing key fails
+        here exactly as it would at admission (``bad_credential_proof``, the
+        underlying ``proof_invalid``/``stale_key`` in ``detail``). Then, per
+        disclosed receipt (failures accumulated across entries): the proof is
+        well-formed (``malformed_proof``), its ``leaf_count`` equals the
+        signed ``receipt_count`` — the signed bound on the undisclosed
+        remainder (``count_mismatch``) — and the receipt folds to the signed
+        ``behavioral_merkle_root`` (``not_included``).
+
+        Deliberately absent: score recomputation. Disclosure proves *which
+        receipts happened* under the signed commitment; the reputation
+        aggregate is a whole-graph property, so the signed score stands and a
+        disclosed subset is never grounds to re-derive or adjust it. That is
+        :meth:`admit`'s job, with the full ledger.
+
+        Example::
+
+            result = await gate.verify_presentation(pres, identity=gate_ident)
+        """
+        credential = presentation.get("credential")
+        disclosed = presentation.get("disclosed")
+        if not isinstance(credential, dict) or not isinstance(disclosed, list):
+            return DisclosureResult(False, ("malformed_presentation",))
+        credential_typed = cast("dict[str, Any]", credential)
+        parsed = _parse_credential(credential_typed)
+        if parsed is None:
+            return DisclosureResult(
+                False, ("malformed_presentation",), detail="credential failed to parse"
+            )
+        issuer, valid_from, subject = parsed
+        if expected_issuer is not None and issuer != expected_issuer:
+            return DisclosureResult(False, ("issuer_mismatch",), detail=issuer)
+        if not isinstance(subject["receipt_count"], int):
+            return DisclosureResult(
+                False, ("malformed_presentation",), detail="receipt_count not an int"
+            )
+
+        proof_reason = await self._verify_proof(credential_typed, issuer, valid_from, identity)
+        if proof_reason is not None:
+            return DisclosureResult(False, ("bad_credential_proof",), detail=proof_reason)
+
+        root = str(subject["behavioral_merkle_root"])
+        receipt_count = int(subject["receipt_count"])
+        reasons: list[str] = []
+        for entry in cast("list[Any]", disclosed):
+            for reason in _disclosed_entry_reasons(entry, root=root, receipt_count=receipt_count):
+                if reason not in reasons:
+                    reasons.append(reason)
+        if reasons:
+            return DisclosureResult(False, tuple(reasons))
+        return DisclosureResult(True)
 
 
 def _parse_credential(

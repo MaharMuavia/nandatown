@@ -62,6 +62,19 @@ trusting*:
   N-party ring, so the gate also re-runs whole-graph collusion
   severance over the originating domain's **published ledger**.
 
+**Selective disclosure.** A holder need not show a verifier the whole
+ledger: `build_presentation` packages chosen receipts, each with a
+Merkle inclusion proof against the credential's signed
+`behavioral_merkle_root`, and `verify_presentation` confirms every
+disclosed receipt is committed under that root — and that each proof's
+`leaf_count` equals the signed `receipt_count`, the bound on the
+undisclosed remainder — without needing the rest of the ledger. Scores
+are **not** recomputed from a disclosed subset: the reputation
+aggregate is a whole-graph property (collusion severance needs every
+edge), so the signed score stands — re-deriving it from a hand-picked
+subset is exactly the cherry-picking this split forbids. Full-ledger
+recomputation remains `admit`'s job.
+
 Source: [`nest_plugins_reference/trust/parc.py`](../../packages/nest-plugins-reference/nest_plugins_reference/trust/parc.py).
 Scenario: `parc_migration` (two trust domains in one run; forged,
 replayed, stale-key, inflated, and wash-ring credentials each denied
@@ -74,5 +87,4 @@ entry point group `nest.plugins.trust`.
 
 Good fits to test here: EigenTrust-style transitive reputation,
 proof-of-stake reputation, decaying scores, attestation graphs,
-selective disclosure of credential receipts (Merkle inclusion proofs),
 credential revocation registries.

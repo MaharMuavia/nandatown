@@ -18,6 +18,10 @@ Property tests (Hypothesis) assert the structural invariants:
 4. Admission thresholding is exact: admitted iff recomputed score clears
    ``min_reputation_score``.
 5. base58btc round-trips against an independent decoder.
+6. Every leaf of every ledger yields an inclusion proof that verifies
+   against ``merkle_root``; disclosure verification is tamper-sensitive
+   (wrong receipt / sibling / root / leaf count / credential proof) and
+   byte-deterministic.
 """
 
 from __future__ import annotations
@@ -47,7 +51,9 @@ from nest_plugins_reference.trust.parc import (
     attach_proof,
     credential_payload,
     did_key_for_pubkey,
+    inclusion_proof,
     merkle_root,
+    verify_inclusion,
 )
 
 _ISSUER = AgentId("issuer-a")
@@ -544,3 +550,223 @@ class TestProperties:
                 assert score < threshold
 
         asyncio.run(run())
+
+
+# ---------------------------------------------------------------------------
+# Selective disclosure — inclusion proofs
+# ---------------------------------------------------------------------------
+
+
+def _ledger(count: int, *, issuer: str = "alice") -> list[dict[str, Any]]:
+    """``count`` deterministic corroborated receipts issued by ``issuer``."""
+    return [_receipt(issuer, f"cp{i}", rid=f"r{i:02d}") for i in range(count)]
+
+
+class TestInclusionProofs:
+    def test_round_trip_all_sizes(self) -> None:
+        # Every leaf of 1-, 2-, 3- (odd duplication), 8- and 50-leaf trees
+        # proves and verifies against the plugin's own merkle_root.
+        for count in (1, 2, 3, 8, 50):
+            receipts = _ledger(count)
+            root = merkle_root(receipts)
+            for r in receipts:
+                proof = inclusion_proof(receipts, receipt=r)
+                assert proof["leaf_count"] == count
+                assert verify_inclusion(r, proof, root)
+
+    @given(st.integers(min_value=1, max_value=10))
+    @settings(deadline=None, max_examples=15)
+    def test_every_leaf_proves_membership(self, count: int) -> None:
+        receipts = _ledger(count)
+        root = merkle_root(receipts)
+        for r in receipts:
+            assert verify_inclusion(r, inclusion_proof(receipts, receipt=r), root)
+
+    def test_single_receipt_path_is_empty(self) -> None:
+        # A one-leaf tree IS its root: the authentication path has no steps.
+        receipts = _ledger(1)
+        proof = inclusion_proof(receipts, receipt=receipts[0])
+        assert proof == {"leaf_index": 0, "leaf_count": 1, "path": []}
+        assert (
+            merkle_root(receipts)
+            == hashlib.sha256(
+                json.dumps(receipts[0], sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest()
+        )
+
+    def test_absent_receipt_raises(self) -> None:
+        receipts = _ledger(3)
+        stranger = _receipt("alice", "zed", rid="zz")
+        with pytest.raises(ValueError, match="not present"):
+            inclusion_proof(receipts, receipt=stranger)
+
+    def test_tampered_receipt_rejected(self) -> None:
+        receipts = _ledger(4)
+        root = merkle_root(receipts)
+        proof = inclusion_proof(receipts, receipt=receipts[0])
+        tampered = copy.deepcopy(receipts[0])
+        tampered["action"]["category"] = "payment_sent"
+        assert not verify_inclusion(tampered, proof, root)
+
+    def test_tampered_sibling_rejected(self) -> None:
+        receipts = _ledger(4)
+        root = merkle_root(receipts)
+        proof = copy.deepcopy(inclusion_proof(receipts, receipt=receipts[0]))
+        sibling = proof["path"][0]["sibling"]
+        proof["path"][0]["sibling"] = ("0" if sibling[0] != "0" else "f") + sibling[1:]
+        assert not verify_inclusion(receipts[0], proof, root)
+
+    def test_wrong_root_rejected(self) -> None:
+        receipts = _ledger(4)
+        proof = inclusion_proof(receipts, receipt=receipts[0])
+        assert not verify_inclusion(receipts[0], proof, merkle_root(receipts[:3]))
+
+    def test_malformed_proof_rejected(self) -> None:
+        receipts = _ledger(2)
+        root = merkle_root(receipts)
+        assert not verify_inclusion(receipts[0], {}, root)
+        assert not verify_inclusion(receipts[0], {"path": [{"sibling": 7}]}, root)
+        assert not verify_inclusion(
+            receipts[0], {"path": [{"sibling": "ab", "position": "up"}]}, root
+        )
+
+    def test_proof_deterministic(self) -> None:
+        # Two independent builds of the same ledger produce byte-identical
+        # proofs — the disclosure surface inherits the plugin's determinism.
+        one = inclusion_proof(_ledger(7), receipt=_ledger(7)[3])
+        two = inclusion_proof(_ledger(7), receipt=_ledger(7)[3])
+        assert json.dumps(one, sort_keys=True) == json.dumps(two, sort_keys=True)
+
+
+# ---------------------------------------------------------------------------
+# Selective disclosure — presentations
+# ---------------------------------------------------------------------------
+
+
+async def _presentation(
+    count: int = 20, disclose: tuple[str, ...] = ("r03", "r07", "r11")
+) -> tuple[dict[str, Any], ParcTrust, list[dict[str, Any]]]:
+    """A genuine presentation over a ``count``-receipt ledger + its trust."""
+    receipts = _ledger(count)
+    trust = await _trust_with(receipts)
+    issuer_ident, _, _ = _identities()
+    vc = await trust.build_credential(AgentId("alice"), identity=issuer_ident, valid_from=_ISSUE_AT)
+    return trust.build_presentation(vc, receipts, disclose=disclose), trust, receipts
+
+
+async def _verify_pres(trust: ParcTrust, presentation: dict[str, Any], **kwargs: Any) -> Any:
+    """Verify ``presentation`` against the standard gate identity wiring."""
+    _, gate_ident, _ = _identities()
+    return await trust.verify_presentation(presentation, identity=gate_ident, **kwargs)
+
+
+class TestPresentation:
+    @pytest.mark.asyncio
+    async def test_round_trip_ok(self) -> None:
+        pres, trust, _ = await _presentation()
+        assert [e["receipt"]["receipt_id"] for e in pres["disclosed"]] == ["r03", "r07", "r11"]
+        assert all(e["proof"]["leaf_count"] == 20 for e in pres["disclosed"])
+        result = await _verify_pres(trust, pres)
+        assert (result.ok, result.reasons) == (True, ())
+
+    @pytest.mark.asyncio
+    async def test_expected_issuer_enforced(self) -> None:
+        pres, trust, _ = await _presentation()
+        ok = await _verify_pres(trust, pres, expected_issuer=f"did:nest:{_ISSUER}")
+        assert ok.ok is True
+        bad = await _verify_pres(trust, pres, expected_issuer="did:nest:someone")
+        assert (bad.ok, bad.reasons) == (False, ("issuer_mismatch",))
+
+    @pytest.mark.asyncio
+    async def test_tampered_disclosed_receipt_not_included(self) -> None:
+        pres, trust, _ = await _presentation()
+        pres = copy.deepcopy(pres)
+        pres["disclosed"][0]["receipt"]["action"]["category"] = "payment_sent"
+        result = await _verify_pres(trust, pres)
+        assert (result.ok, result.reasons) == (False, ("not_included",))
+
+    @pytest.mark.asyncio
+    async def test_receipt_from_different_ledger_not_included(self) -> None:
+        # Mallory splices a receipt (plus a genuine proof) from her OWN
+        # 20-receipt ledger into alice's presentation: leaf_count matches the
+        # signed receipt_count, but the leaf folds to mallory's root.
+        pres, trust, _ = await _presentation()
+        other = _ledger(20, issuer="mallory")
+        pres = copy.deepcopy(pres)
+        pres["disclosed"][0] = {
+            "receipt": other[0],
+            "proof": inclusion_proof(other, receipt=other[0]),
+        }
+        result = await _verify_pres(trust, pres)
+        assert (result.ok, result.reasons) == (False, ("not_included",))
+
+    @pytest.mark.asyncio
+    async def test_leaf_count_lie_count_mismatch(self) -> None:
+        # The path still folds to the root; only the claimed scope bound lies.
+        pres, trust, _ = await _presentation()
+        pres = copy.deepcopy(pres)
+        pres["disclosed"][1]["proof"]["leaf_count"] = 3
+        result = await _verify_pres(trust, pres)
+        assert (result.ok, result.reasons) == (False, ("count_mismatch",))
+
+    @pytest.mark.asyncio
+    async def test_forged_credential_proof_rejected(self) -> None:
+        pres, trust, _ = await _presentation()
+        pres = copy.deepcopy(pres)
+        value = pres["credential"]["proof"]["proofValue"]
+        pres["credential"]["proof"]["proofValue"] = ("0" if value[0] != "0" else "f") + value[1:]
+        result = await _verify_pres(trust, pres)
+        assert (result.ok, result.reasons) == (False, ("bad_credential_proof",))
+        assert result.detail == "proof_invalid"
+
+    @pytest.mark.asyncio
+    async def test_inflated_resigned_stale_key_fails_like_admit(self) -> None:
+        # An issuer inflates the score and genuinely re-signs — with a
+        # rotated-out key. admit() rejects it as stale_key; the disclosure
+        # path rejects the SAME credential as bad_credential_proof, carrying
+        # the same underlying reason. No score is recomputed on either path.
+        receipts = _ledger(20)
+        trust = await _trust_with(receipts)
+        issuer_ident, _, old_key_id = _identities()
+        vc = await trust.build_credential(
+            AgentId("alice"), identity=issuer_ident, valid_from=_ISSUE_AT
+        )
+        vc.pop("proof")
+        vc["credentialSubject"]["reputation_score"] = "0.990000"
+        vc = attach_proof(vc, identity=issuer_ident, key_id=old_key_id)
+
+        admit_result = await _admit(trust, vc)
+        assert (admit_result.admitted, admit_result.reason) == (False, "stale_key")
+
+        pres = trust.build_presentation(vc, receipts, disclose=("r00",))
+        result = await _verify_pres(trust, pres)
+        assert (result.ok, result.reasons) == (False, ("bad_credential_proof",))
+        assert result.detail == "stale_key"
+
+    @pytest.mark.asyncio
+    async def test_malformed_disclosed_proof(self) -> None:
+        pres, trust, _ = await _presentation()
+        pres = copy.deepcopy(pres)
+        del pres["disclosed"][0]["proof"]["leaf_count"]
+        result = await _verify_pres(trust, pres)
+        assert (result.ok, result.reasons) == (False, ("malformed_proof",))
+
+    @pytest.mark.asyncio
+    async def test_malformed_presentation(self) -> None:
+        trust = ParcTrust()
+        result = await _verify_pres(trust, {})
+        assert (result.ok, result.reasons) == (False, ("malformed_presentation",))
+        result = await _verify_pres(trust, {"credential": {"type": []}, "disclosed": []})
+        assert (result.ok, result.reasons) == (False, ("malformed_presentation",))
+
+    @pytest.mark.asyncio
+    async def test_unknown_disclose_id_raises(self) -> None:
+        pres, trust, receipts = await _presentation()
+        with pytest.raises(ValueError, match="not present"):
+            trust.build_presentation(pres["credential"], receipts, disclose=("nope",))
+
+    @pytest.mark.asyncio
+    async def test_presentation_deterministic(self) -> None:
+        pres1, _, _ = await _presentation()
+        pres2, _, _ = await _presentation()
+        assert json.dumps(pres1, sort_keys=True) == json.dumps(pres2, sort_keys=True)
