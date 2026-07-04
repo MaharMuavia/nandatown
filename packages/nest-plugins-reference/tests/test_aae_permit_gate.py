@@ -18,8 +18,10 @@ from typing import Any
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from nest_core.types import AgentId, Claim, Evidence
 from nest_plugins_reference.trust.aae_envelope import (
+    canonical_bytes,
     envelope_hash,
     issue_envelope,
     order_chain,
@@ -184,7 +186,8 @@ def test_chain_fork_detected() -> None:
     assert order_chain([*envs, fork]) is None
 
 
-def test_chain_foreign_splice_detected() -> None:
+def test_prev_hash_points_at_foreign_agent_envelope_rejected() -> None:
+    """A prev_hash reaching into another agent's chain is a splice, not a link."""
     a_envs = _make_chain(1, agent="a1")
     spliced = issue_envelope(
         _SK,
@@ -197,8 +200,38 @@ def test_chain_foreign_splice_detected() -> None:
         prev_hash=envelope_hash(a_envs[0]),
         issued_at=_T0,
     )
-    assert order_chain([a_envs[0], spliced]) is None
+    assert order_chain([a_envs[0], spliced]) is None  # two agents: not one chain
     assert order_chain([spliced]) is None  # predecessor absent entirely: gap
+
+
+async def test_replayed_envelope_detected_out_of_sequence() -> None:
+    """Replaying a valid envelope at a second chain position is not a valid chain."""
+    envs = _make_chain(3)
+    # A verbatim replay of an earlier envelope appears twice -> duplicate rejected.
+    assert order_chain([*envs, envs[1]]) is None
+    # Through the gate: injecting a replay of the genesis into stored history
+    # (a second prev_hash=None) makes verify_chain fail (duplicate / two genesis).
+    gate = AAEPermitGate(policy=_ALLOW_READS, key_seed=b"seed")
+    for i in range(2):
+        await gate.evaluate(AgentId("a1"), "read", f"doc/{i}", {}, now=_T0)
+    gate._chains["a1"].append(gate._chains["a1"][0])  # replay genesis out of sequence
+    assert gate.verify_chain(AgentId("a1")) is False
+
+
+def test_forged_pubkey_substitution_fails() -> None:
+    """Swapping an interior envelope's pubkey — re-signed so it self-verifies in
+    isolation — still breaks the chain: envelope_hash commits to pubkey+sig, so the
+    successor's prev_hash no longer resolves (a foreign-key splice reads as a gap)."""
+    envs = _make_chain(3)
+    attacker_key = Ed25519PrivateKey.from_private_bytes(hashlib.sha256(b"attacker").digest())
+    attacker_pub = attacker_key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
+    forged = {**envs[1], "pubkey": attacker_pub}
+    forged["sig"] = attacker_key.sign(canonical_bytes(forged)).hex()
+
+    assert verify_envelope(forged) is True  # self-consistent under the attacker key
+    assert forged["pubkey"] != envs[1]["pubkey"]
+    # env[2] still points at the ORIGINAL hash of env[1], which no longer exists.
+    assert order_chain([envs[0], forged, envs[2]]) is None
 
 
 # ---------------------------------------------------------------------------
