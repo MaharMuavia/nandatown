@@ -80,6 +80,108 @@ Scenario: `parc_migration` (two trust domains in one run; forged,
 replayed, stale-key, inflated, and wash-ring credentials each denied
 with a typed reason).
 
+## `aae_permit_gate` — pre-action authorization with signed denial receipts
+
+Every other trust plugin scores what agents **did**. `aae_permit_gate`
+decides what an agent **may do**, before it does it — and signs the
+decision either way. A well-reputed agent attempting an unauthorized
+action sails through every post-hoc reputation layer; this one stops it,
+and the stop is not a silent absence but a signed, verifiable denial
+receipt.
+
+Source:
+[`trust/aae_permit_gate.py`](../../packages/nest-plugins-reference/nest_plugins_reference/trust/aae_permit_gate.py)
+· envelope format:
+[`trust/aae_envelope.py`](../../packages/nest-plugins-reference/nest_plugins_reference/trust/aae_envelope.py).
+
+**The permit envelope.** Before an action runs, the gate evaluates it
+against a declarative policy table and issues a signed JSON object — a
+*pre-action envelope* — recording the verdict. Eight fields, no more:
+
+| Field | Meaning |
+|---|---|
+| `agent_id` | The acting agent's town identity (whatever string the identity layer yields). |
+| `action` | `{verb, resource, params}` — what the agent intends to do. |
+| `policy_id` | Which policy rule the action was evaluated against. |
+| `outcome` | `"authorized"` \| `"denied"` \| `"conditional"` — denials are first-class. |
+| `prev_hash` | Hash of this agent's previous envelope, or `null` — a per-agent causal chain. |
+| `issued_at` | Evaluation time (RFC 3339). |
+| `sig` | Ed25519 signature over the canonical envelope (sorted keys, compact separators) minus `sig`. |
+| `pubkey` | The verification key. |
+
+`permits(envelope)` is `True` only for `"authorized"`; `"conditional"`
+means authorized subject to the caller honoring the stated condition
+params, and is not itself permission.
+
+**How agents consult it.** The engine does not intercept actions, so
+gating is a scenario contract: an agent calls `evaluate(...)` before
+acting and proceeds only on an authorized envelope. A plugin without an
+`evaluate` method (like `score_average`) is consulted the old way — as a
+score — so scenarios stay drop-in. This is the standard capability-gate
+pattern (`hasattr(trust, "evaluate")`).
+
+**Quickstart.**
+
+```python
+from nest_plugins_reference.trust.aae_permit_gate import AAEPermitGate, permits
+
+gate = AAEPermitGate(
+    policy=[
+        {"role": "resident", "verb": "read", "resource": "town/*", "effect": "authorized"},
+        {"agent": "*", "verb": "spend", "resource": "town/treasury", "effect": "denied"},
+    ],
+    roles={"veteran": "resident"},
+    key_seed=bytes(32),  # deterministic; supply your own
+)
+env = await gate.evaluate("veteran", "spend", "town/treasury", {}, now="2026-07-04T00:00:00Z")
+assert env["outcome"] == "denied" and not permits(env)   # signed denial receipt
+```
+
+**The `rogue_trusted_agent` scenario.** One agent earns a strong
+reputation through many in-policy actions, then reaches for the treasury.
+Run it under `aae_permit_gate` and the reach is refused before it runs:
+
+```
+exec:veteran:read:town/events                       <- reputation accrued (8th in-policy action)
+rogue_attempt:veteran:spend:town/treasury
+permit:veteran:spend:town/treasury:denied:84773277  <- signed denial
+blocked:veteran:spend:town/treasury                 <- never executes
+```
+
+Swap one line — `trust: score_average` — and reputation buys the
+treasury:
+
+```
+rogue_attempt:veteran:spend:town/treasury
+exec:veteran:spend:town/treasury                    <- the rogue action executes
+```
+
+The adversarial validator `rogue_trusted_agent_blocked` FAILS on the
+first trace and PASSES on the second — with no crash on either.
+
+**Trace-line protocol.**
+`permit:<agent>:<verb>:<resource>:<outcome>:<envelope_hash_prefix8>`.
+
+**Relationship to Agent Action Capsules (#32).** Capsules and permit
+envelopes are two halves of one accountability story, on opposite sides
+of the action. A capsule seals a record of what *happened*; a permit
+envelope signs a decision about what *may* happen. They compose as an
+authorization layer over a transparency layer: when the `capsule-emit`
+package is present and anchoring is enabled, each permit — authorization
+or denial — is sealed to the capsule ledger under a `permit.granted` /
+`permit.denied` namespace so it never reads as an executed action. A
+denial that is anchored is evidence that the gate worked. Anchoring is a
+no-op when the package is absent; there is no hard dependency in either
+direction.
+
+**Boundary.** Chain integrity is bound by hash commitment
+(`envelope_hash` covers the signature and key), not by pinning an agent
+to a fixed key — binding an identity to a stable key across its chain is
+the identity layer's job (see `ed25519_rotating`), which this gate
+composes with rather than reimplements. `attest` signs a claim with the
+gate key; `report` records evidence a future policy may reference;
+`stake` is a documented parity no-op.
+
 ## Writing your own
 
 See [`writing-a-plugin.md`](../writing-a-plugin.md). Register under
