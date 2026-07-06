@@ -50,6 +50,7 @@ async function migrate(): Promise<void> {
       tags         text,
       reachable    boolean,
       email        text,
+      github_username text,
       submitter_ip text,
       created_at   timestamptz not null default now(),
       updated_at   timestamptz not null default now()
@@ -60,6 +61,7 @@ async function migrate(): Promise<void> {
   // if not exists` never alters an existing table, so these ALTERs are what
   // actually backfill the live registry. Each is idempotent.
   await db`alter table skills add column if not exists email text`;
+  await db`alter table skills add column if not exists github_username text`;
   await db`alter table skills add column if not exists submitter_ip text`;
   await db`alter table skills add column if not exists updated_at timestamptz not null default now()`;
 

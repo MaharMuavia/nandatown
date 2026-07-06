@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
   const sourceUrl = s(body.source_url);
   const content = typeof body.content === "string" ? body.content : "";
   const email = s(body.email);
+  const githubUsername = s(body.github_username).replace(/^@/, "");
   const forwarded = request.headers.get("x-forwarded-for");
   const submitterIp = forwarded
     ? forwarded.split(",")[0].trim() || null
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
       tags: s(body.tags) || null,
       reachable: null,
       email: email || null,
+      github_username: githubUsername || null,
       submitter_ip: submitterIp,
     });
     return Response.json({ skill }, { status: 201 });

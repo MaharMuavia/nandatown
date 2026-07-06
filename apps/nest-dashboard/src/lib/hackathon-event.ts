@@ -11,6 +11,7 @@ export const hackathonEvent = {
   tagline: "An agentic AI hackathon by Project NANDA, HCLTech, and MIT Media Lab.",
   lumaUrl: "https://luma.com/a98t3dze",
   officialUrl: "https://nandahack.media.mit.edu",
+  repoUrl: "https://github.com/projnanda/nandatown",
   githubPRsUrl: "https://github.com/projnanda/nandatown/pulls",
   virtualWindow: "June 7 – July 10",
   submissionDeadline: "Friday, July 10 · 12:00 PM ET",

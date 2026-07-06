@@ -23,6 +23,24 @@ function isValidEmail(value: string): boolean {
 }
 
 /**
+ * Reduce whatever the user typed to a bare GitHub handle: strip a leading "@",
+ * a full "github.com/…" URL, and any trailing slash. Returns "" if nothing
+ * usable is left.
+ */
+function normalizeGithubUsername(value: string): string {
+  let v = value.trim().replace(/^@/, "");
+  const urlMatch = v.match(/github\.com\/([^/\s?#]+)/i);
+  if (urlMatch) v = urlMatch[1];
+  return v.replace(/\/+$/, "").trim();
+}
+
+function isValidGithubUsername(value: string): boolean {
+  // GitHub handles: 1–39 chars, alphanumeric or single hyphens, no leading/
+  // trailing hyphen.
+  return /^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/.test(value);
+}
+
+/**
  * Best-effort client IP from the proxy headers Railway sets. Falls back to
  * null when we can't tell (e.g. local dev without a proxy).
  */
@@ -60,6 +78,7 @@ export async function submitSkill(
   const name = str(formData.get("name"));
   const author = str(formData.get("author"));
   const email = str(formData.get("email"));
+  const githubUsername = normalizeGithubUsername(str(formData.get("github_username")));
   const description = str(formData.get("description"));
   const endpoints = str(formData.get("endpoints"));
   const tags = str(formData.get("tags"));
@@ -73,6 +92,12 @@ export async function submitSkill(
   }
   if (email && !isValidEmail(email)) {
     return { ...initialSubmitState, error: "That email doesn't look right." };
+  }
+  if (githubUsername && !isValidGithubUsername(githubUsername)) {
+    return {
+      ...initialSubmitState,
+      error: "Enter just your GitHub username (e.g. octocat).",
+    };
   }
   if (!["url", "github", "content"].includes(sourceType)) {
     return { ...initialSubmitState, error: "Pick how you want to submit it." };
@@ -110,6 +135,7 @@ export async function submitSkill(
       tags: tags || null,
       reachable,
       email: email || null,
+      github_username: githubUsername || null,
       submitter_ip: submitterIp,
     });
     revalidatePath("/skills");

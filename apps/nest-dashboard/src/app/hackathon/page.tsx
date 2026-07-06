@@ -11,6 +11,7 @@ import Link from "next/link";
 import { formatLinesAdded, loadDataset } from "@/lib/hackathon";
 import { EmptyState, SubmissionCard } from "@/components/hackathon-card";
 import { HackathonFaq } from "@/components/hackathon-faq";
+import { HackathonPhases } from "@/components/hackathon-phases";
 import { hackathonEvent, hackathonFaqs } from "@/lib/hackathon-event";
 
 export const revalidate = 300;
@@ -121,6 +122,13 @@ export default async function HackathonLandingPage() {
               FAQs
             </a>
           </div>
+        </div>
+      </section>
+
+      {/* Two phases to join */}
+      <section className="border-b border-cream-400/70 bg-cream-50">
+        <div className="mx-auto max-w-[1240px] px-6 sm:px-10 py-14">
+          <HackathonPhases />
         </div>
       </section>
 

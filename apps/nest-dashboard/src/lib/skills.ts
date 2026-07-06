@@ -30,6 +30,8 @@ export interface NewSkill {
   reachable?: boolean | null;
   /** Private — for follow-up. Stored, but never returned by the public API. */
   email?: string | null;
+  /** Private — GitHub handle, so we can find the submitter's hackathon PR. */
+  github_username?: string | null;
   /** Private — submitter IP, captured server-side. Never returned publicly. */
   submitter_ip?: string | null;
 }
@@ -73,12 +75,12 @@ export async function createSkill(input: NewSkill): Promise<Skill> {
   const rows = await db`
     insert into skills
       (name, author, description, source_type, source_url, content,
-       endpoints, tags, reachable, email, submitter_ip)
+       endpoints, tags, reachable, email, github_username, submitter_ip)
     values
       (${input.name}, ${input.author ?? null}, ${input.description ?? null},
        ${input.source_type}, ${input.source_url ?? null}, ${input.content ?? null},
        ${input.endpoints ?? null}, ${input.tags ?? null}, ${input.reachable ?? null},
-       ${input.email ?? null}, ${input.submitter_ip ?? null})
+       ${input.email ?? null}, ${input.github_username ?? null}, ${input.submitter_ip ?? null})
     returning id, name, author, description, source_type, source_url,
               content, endpoints, tags, reachable, created_at
   `;
@@ -89,6 +91,7 @@ export async function createSkill(input: NewSkill): Promise<Skill> {
   const snapshot = {
     ...skill,
     email: input.email ?? null,
+    github_username: input.github_username ?? null,
     submitter_ip: input.submitter_ip ?? null,
   };
   await db`
