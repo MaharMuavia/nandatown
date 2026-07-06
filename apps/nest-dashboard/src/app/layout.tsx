@@ -47,15 +47,11 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-cream-100 text-ink-900">
+      <body className="min-h-full flex flex-col bg-cream-100 text-ink-900">
         <HackathonBanner />
-        <div className="flex min-h-screen flex-col md:flex-row">
-          <Navbar />
-          <div className="flex min-w-0 flex-1 flex-col">
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-        </div>
+        <Navbar />
+        <main className="flex-1">{children}</main>
+        <Footer />
       </body>
     </html>
   );

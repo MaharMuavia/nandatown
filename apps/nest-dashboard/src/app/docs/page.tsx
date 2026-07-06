@@ -150,9 +150,9 @@ function Sidebar({
 
       <aside
         className={`
-          fixed top-14 left-0 z-50 h-[calc(100vh-3.5rem)] w-72 transform border-r border-cream-400/70
+          fixed top-16 left-0 z-50 h-[calc(100vh-4rem)] w-72 transform border-r border-cream-400/70
           bg-cream-100/95 backdrop-blur-md transition-transform duration-300 ease-in-out
-          lg:sticky lg:top-0 lg:z-10 lg:h-screen lg:shrink-0 lg:translate-x-0 lg:bg-transparent lg:transition-none
+          lg:z-10 lg:translate-x-0 lg:bg-transparent
           ${open ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
@@ -309,7 +309,7 @@ export default function DocsPage() {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-cream-100 lg:flex">
+    <div className="relative min-h-screen bg-cream-100">
       {/* Mobile menu button */}
       <button
         onClick={() => setSidebarOpen(true)}
@@ -326,7 +326,7 @@ export default function DocsPage() {
       />
 
       {/* Main content */}
-      <div className="min-w-0 lg:flex-1">
+      <div className="lg:ml-72">
         <div className="mx-auto max-w-3xl px-6 pb-24 pt-10 lg:px-12">
           {/* Overview */}
           <Section id="overview" title="Overview">
