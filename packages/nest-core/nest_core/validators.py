@@ -272,11 +272,21 @@ def validate_auction_winner_highest(
                 winners[item] = (bidder, amount)
 
     violations: list[str] = []
-    for item, (_winner, winning_amount) in winners.items():
-        for bidder, amount in bids.get(item, []):
-            if amount > winning_amount:
+    for item, (winner, winning_amount) in winners.items():
+        item_bids = bids.get(item, [])
+        # The invariant is about the winner's REAL bid, not the announced
+        # amount. Trusting the announced amount lets an auctioneer award a low
+        # bidder while announcing a figure inflated past every real bid, and the
+        # check would pass. Use the winner's own highest observed bid; fall back
+        # to the announced amount only when the winner's bid was not observed
+        # (e.g. dropped under message loss), so this never fails a valid trace.
+        winner_bids = [amount for bidder, amount in item_bids if bidder == winner]
+        effective_winner_bid = max(winner_bids) if winner_bids else winning_amount
+        for bidder, amount in item_bids:
+            if amount > effective_winner_bid:
                 violations.append(
-                    f"item {item}: winner bid {winning_amount} but {bidder} bid {amount}"
+                    f"item {item}: winner {winner} bid {effective_winner_bid} "
+                    f"but {bidder} bid {amount}"
                 )
                 break
 
