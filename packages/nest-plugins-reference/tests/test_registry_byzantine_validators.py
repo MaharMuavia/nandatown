@@ -101,6 +101,27 @@ def test_forged_card_validator_passes_against_byzantine_style_signed_card() -> N
     assert report.passed, report.detail
 
 
+def test_forged_validator_fails_when_a_view_entry_is_unverifiable() -> None:
+    """Absence of evidence must never read as a pass.
+
+    A view entry whose publisher has no supplied identity (so its signature
+    cannot be checked either way) must not let the report come back clean --
+    a real forgery hiding behind an under-populated ``identities``/``cards``
+    input would otherwise be masked as PASS. Unverifiable is a FAIL, not a
+    silent no-op.
+    """
+    idents = _peered_identities("a")  # no identity registered for "a" as a *publisher* lookup key
+    del idents[AgentId("a")]  # simulate an identity missing from the caller's input entirely
+    views = {AgentId("b"): {AgentId("a"): (1, AgentId("a"), False)}}
+    cards = {AgentId("a"): AgentCard(agent_id=AgentId("a"), name="A")}
+
+    report = check_no_forged_card_in_view(views=views, identities=idents, cards=cards)
+
+    assert not report.passed
+    unverifiable = cast("list[tuple[str, str]]", report.evidence["unverifiable"])
+    assert ("b", "a") in unverifiable
+
+
 # ---------------------------------------------------------------------------
 # check_no_equivocation_accepted
 # ---------------------------------------------------------------------------

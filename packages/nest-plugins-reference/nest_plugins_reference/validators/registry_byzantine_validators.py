@@ -160,10 +160,14 @@ def check_no_forged_card_in_view(
 
     Returns ``passed=True`` iff every view entry's card carries a signature
     that verifies under ``canonical_write_bytes(card, version, tombstone)``
-    for its claimed publisher. A view entry whose card is missing from
-    ``cards`` or whose publisher is missing from ``identities`` cannot be
-    judged either way -- it is reported under ``evidence["unverifiable"]``
-    rather than silently counted as passing or failing.
+    for its claimed publisher, AND every view entry could actually be
+    checked. A view entry whose card is missing from ``cards`` or whose
+    publisher is missing from ``identities`` cannot be judged either way --
+    it is reported under ``evidence["unverifiable"]`` -- but "cannot be
+    judged" is never a pass: an unverifiable entry FAILs the report exactly
+    like a proven forgery does, because a real forged card behind an
+    under-populated ``cards``/``identities`` input would otherwise be masked
+    as clean. Absence of evidence is not evidence of safety.
 
     Against the reference ``gossip``/``in_memory`` plugins this always
     FAILs: neither ever calls ``identity.sign``/``.verify``, so no card
@@ -189,19 +193,27 @@ def check_no_forged_card_in_view(
                 continue
             if not _signature_valid(card, version, tombstone, publisher_id, identity):
                 offenders.append((str(viewer), str(publisher_id)))
-    if offenders:
-        return ValidatorReport(
-            passed=False,
-            detail=(
+    if offenders or unverifiable:
+        details: list[str] = []
+        if offenders:
+            details.append(
                 f"{len(offenders)} view entries hold a card that fails to verify "
                 "under its claimed publisher's identity"
-            ),
+            )
+        if unverifiable:
+            details.append(
+                f"{len(unverifiable)} view entries could not be checked at all "
+                "(missing card or missing identity) and are therefore not passed"
+            )
+        return ValidatorReport(
+            passed=False,
+            detail="; ".join(details),
             evidence={"offenders": offenders[:20], "unverifiable": unverifiable[:20]},
         )
     return ValidatorReport(
         passed=True,
         detail="every view entry's card verifies under its claimed publisher's identity",
-        evidence={"unverifiable": unverifiable[:20]} if unverifiable else {},
+        evidence={},
     )
 
 
