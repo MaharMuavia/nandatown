@@ -1244,6 +1244,93 @@ def validate_memory_convergence(
     return results
 
 
+def validate_or_map_convergence(
+    events: list[dict[str, Any]],
+) -> list[ValidationResult]:
+    """Trace validator: every OR-Map replica agrees on the shared key's value.
+
+    The ``memory_or_map_add_remove`` scenario has each agent broadcast a
+    ``final:{"key": ..., "value": <base64 | null>}`` record on stop, carrying
+    the *winning value* it reads after add/remove churn and gossip. This
+    validator confirms every agent emitted exactly one such record and that all
+    of them report the same value -- i.e. the swarm converged despite removes,
+    reordering, and loss. A value of ``null`` (key absent) is a legitimate
+    converged outcome as long as every replica agrees on it.
+    """
+    finals: dict[str, str] = {}
+    duplicates: set[str] = set()
+    malformed: list[str] = []
+
+    for ev in events:
+        if ev.get("kind") not in ("send", "broadcast"):
+            continue
+        msg = str(ev.get("msg", ""))
+        if not msg.startswith("final:"):
+            continue
+        agent = str(ev.get("agent", ""))
+        body = msg[len("final:") :]
+        try:
+            parsed = json.loads(body)
+            value = cast("dict[str, Any]", parsed).get("value")
+            canonical = json.dumps(value, sort_keys=True)
+        except (ValueError, TypeError, AttributeError):
+            malformed.append(agent)
+            continue
+        if agent in finals:
+            duplicates.add(agent)
+        finals[agent] = canonical
+
+    results: list[ValidationResult] = []
+
+    if malformed:
+        results.append(
+            ValidationResult(
+                "or_map_convergence_wellformed",
+                False,
+                f"{len(malformed)} malformed final record(s): {sorted(set(malformed))}",
+            )
+        )
+
+    if not finals:
+        results.append(
+            ValidationResult(
+                "or_map_convergence",
+                False,
+                "no final replica values found in trace",
+            )
+        )
+        return results
+
+    distinct = set(finals.values())
+    if len(distinct) == 1:
+        results.append(
+            ValidationResult(
+                "or_map_convergence",
+                True,
+                f"all {len(finals)} replicas converged to value {next(iter(distinct))}",
+            )
+        )
+    else:
+        results.append(
+            ValidationResult(
+                "or_map_convergence",
+                False,
+                f"{len(finals)} replicas hold {len(distinct)} distinct values: {sorted(distinct)}",
+            )
+        )
+
+    if duplicates:
+        results.append(
+            ValidationResult(
+                "or_map_convergence_one_final_per_agent",
+                False,
+                f"agents emitted multiple final records: {sorted(duplicates)}",
+            )
+        )
+
+    return results
+
+
 # ---------------------------------------------------------------------------
 # Streaming payments validators
 # ---------------------------------------------------------------------------
@@ -4975,6 +5062,10 @@ VALIDATORS: dict[str, list[Any]] = {
     ],
     "memory_concurrent_writers": [
         validate_memory_convergence,
+        validate_memory_liveness,
+    ],
+    "memory_or_map_add_remove": [
+        validate_or_map_convergence,
         validate_memory_liveness,
     ],
     "streaming_payments": [

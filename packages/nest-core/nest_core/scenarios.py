@@ -109,6 +109,12 @@ def _try_load_builtin(name: str) -> None:
         )
 
         register_scenario("memory_concurrent_writers", memory_concurrent_writers_factory)
+    elif name == "memory_or_map_add_remove":
+        from nest_core.scenarios_builtin.memory_or_map_add_remove import (
+            memory_or_map_add_remove_factory,
+        )
+
+        register_scenario("memory_or_map_add_remove", memory_or_map_add_remove_factory)
     elif name == "comms_versioning":
         from nest_core.scenarios_builtin.comms_versioning import comms_versioning_factory
 

@@ -2000,6 +2000,7 @@ class TestValidatorRegistry:
             "identity_rotation",
             "attested_peering",
             "memory_concurrent_writers",
+            "memory_or_map_add_remove",
             "streaming_payments",
             "empic_payments",
             "comms_versioning",

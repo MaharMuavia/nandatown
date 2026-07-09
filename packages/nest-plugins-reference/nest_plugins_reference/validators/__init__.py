@@ -29,6 +29,11 @@ from nest_plugins_reference.validators.gossip_validators import (
     check_converged,
     check_no_partition_view_leak,
 )
+from nest_plugins_reference.validators.or_map_validators import (
+    AddWinsViolationError,
+    check_add_wins_survives_concurrent_remove,
+    check_convergence_under_churn,
+)
 from nest_plugins_reference.validators.privacy_validators import (
     check_eavesdropper_blocked,
     check_field_injection_rejected,
@@ -45,11 +50,14 @@ from nest_plugins_reference.validators.trust_gate_validators import (
 )
 
 __all__ = [
+    "AddWinsViolationError",
     "ConvergenceFailureError",
     "PartitionLeakError",
     "ValidatorReport",
+    "check_add_wins_survives_concurrent_remove",
     "check_audience_binding",
     "check_converged",
+    "check_convergence_under_churn",
     "check_denial_receipt_auditable",
     "check_eavesdropper_blocked",
     "check_field_injection_rejected",
