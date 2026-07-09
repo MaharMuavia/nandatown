@@ -1691,6 +1691,7 @@ def validate_empic_pubsub_billing_caps(
         result = validate_empic_pubsub_billing_caps(events)[0]
     """
     audit = _empic_audit_events(events)
+    stream_refs: set[str] = set()
     streams: dict[str, tuple[int, int]] = {}
     accepted: dict[str, set[str]] = defaultdict(set)
     released: dict[str, int] = defaultdict(int)
@@ -1702,21 +1703,25 @@ def validate_empic_pubsub_billing_caps(
         if not ref:
             continue
         if event_type == "empic_stream_opened":
+            stream_refs.add(ref)
             rate = _safe_amount(ev.get("rate_per_tick"))
             max_total = _safe_amount(ev.get("max_total") or ev.get("amount"))
             if rate <= 0 or max_total <= 0:
                 violations.append(f"{ref}: invalid stream terms rate={rate} max_total={max_total}")
             else:
                 streams[ref] = (rate, max_total)
-        elif (
+            continue
+
+        is_pubsub_ref = ref in stream_refs or ev.get("mode") == "pubsub"
+        if (
             event_type == "empic_delivery_evaluated"
             and ev.get("accepted") is True
-            and ev.get("mode") == "pubsub"
+            and is_pubsub_ref
         ):
             delivery_id = _empic_delivery_id(ev)
             if delivery_id:
                 accepted[ref].add(delivery_id)
-        elif event_type == "empic_escrow_released" and ev.get("mode") == "pubsub":
+        elif event_type == "empic_escrow_released" and is_pubsub_ref:
             amount = _safe_amount(ev.get("amount"))
             delivery_id = _empic_delivery_id(ev)
             terms = streams.get(ref)
@@ -2150,7 +2155,7 @@ def validate_empic_no_drain_after_close(
                 close_tick[ref] = _event_tick(ev)
 
     for ev in audit:
-        if ev.get("event_type") != "empic_escrow_released" or ev.get("mode") != "pubsub":
+        if ev.get("event_type") != "empic_escrow_released":
             continue
         ref = str(ev.get("payment_ref", ""))
         closed_at = close_tick.get(ref)
@@ -2204,7 +2209,7 @@ def validate_empic_no_overbill_on_partition(
                 partition_start[edge] = tick
 
     for ev in audit:
-        if ev.get("event_type") != "empic_escrow_released" or ev.get("mode") != "pubsub":
+        if ev.get("event_type") != "empic_escrow_released":
             continue
         ref = str(ev.get("payment_ref", ""))
         parties = stream_parties.get(ref)
