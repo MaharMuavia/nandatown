@@ -29,13 +29,28 @@ forge a card claiming another agent's identity (impersonation) or mutate a
 previously-honest card's bytes in transit (forgery) and any peer that only
 trusts "it must be fine, gossip is honest-but-partitioned" will merge it
 straight into its view.  This plugin closes that gap: ``handle_gossip``'s
-``OP_PUSH`` branch verifies ``identity.verify(canonical_card_bytes(card),
-sig, card.agent_id)`` for every incoming card and drops (never ``_apply``s)
-anything that is unsigned, claims a signer other than its own
-``agent_id`` (impersonation), or fails cryptographic verification
-(forgery/mutation) — recording ``(agent_id, reason)`` in ``self.rejections``
-for judge/validator legibility with reason codes ``missing_signature``,
-``signer_mismatch``, and ``bad_signature``, mirroring ``#67``'s taxonomy.
+``OP_PUSH`` branch verifies ``identity.verify(canonical_write_bytes(card,
+tag.version, tombstone), sig, card.agent_id)`` for every incoming card and
+drops (never ``_apply``s) anything that is unsigned, claims a signer other
+than its own ``agent_id`` (impersonation), or fails cryptographic
+verification (forgery/mutation) — recording ``(agent_id, reason)`` in
+``self.rejections`` for judge/validator legibility with reason codes
+``missing_signature``, ``signer_mismatch``, and ``bad_signature``, mirroring
+``#67``'s taxonomy.
+
+Critically, the signature binds not just the card's *content* but also its
+**write tag (version) and tombstone bit**.  Content-only signing (sign
+``agent_id``/``name``/``capabilities``/``endpoint``, nothing else) leaves a
+gap of its own: the wire-supplied ``_WriteTag`` and ``tombstone`` in an
+``OP_PUSH`` entry are merged verbatim once the *card* checks out, so a relay
+with **no private key at all** can replay a genuinely-signed card under a
+forged, inflated ``version`` (winning last-writer-wins against the
+publisher's real future writes, i.e. blocking updates) or with a flipped
+``tombstone`` bit (resurrecting a deregistered agent — an "un-delete" — or
+silently deleting a live one).  Binding the signature to
+``(content, version, tombstone)`` closes that: a replayed card with a
+tampered tag or tombstone now fails verification and is dropped as
+``bad_signature``, exactly like a forged/mutated card.
 
 Note what this still does **not** defend against: a publisher who signs two
 *different*, both validly-signed cards at the same version (equivocation).
@@ -129,10 +144,12 @@ class ByzantineGossipRegistry:
     ``lookup``, ``subscribe``, ``deregister``.  Delegates to the same
     local-view / last-writer-wins merge logic as
     ``nest_plugins_reference.registry.gossip.GossipRegistry``, but
-    ``register`` signs every card via the injected ``Identity`` and
+    ``register``/``deregister`` sign every write via the injected
+    ``Identity`` — content plus version plus tombstone — and
     ``handle_gossip`` verifies that signature (fresh, against
-    ``card.agent_id``) before merging an inbound card — see the module
-    docstring for why registration-only signing (``#67``) is not enough.
+    ``card.agent_id`` and the wire-supplied version/tombstone) before
+    merging an inbound card — see the module docstring for why
+    registration-only, content-only signing (``#67``) is not enough.
     Equivocation detection and eclipse resistance land in Tasks 3-4.
 
     Driver agents call ``gossip_round(ctx)`` on a schedule and forward
@@ -173,11 +190,14 @@ class ByzantineGossipRegistry:
     async def register(self, card: AgentCard) -> None:
         """Register ``card`` locally, signed; gossip propagates it on the next round.
 
-        Signs ``canonical_card_bytes(card)`` with this agent's ``Identity``
-        and stores the signature in ``card.metadata["sig"]`` (a fresh
-        ``AgentCard`` — the caller's instance is not mutated) so every peer
-        that later receives this card via gossip can verify it came from
-        ``card.agent_id`` and was not altered in transit.
+        Allocates this write's version first, then signs
+        ``canonical_write_bytes(card, version, tombstone=False)`` with this
+        agent's ``Identity`` and stores the signature in
+        ``card.metadata["sig"]`` (a fresh ``AgentCard`` — the caller's
+        instance is not mutated) so every peer that later receives this
+        card via gossip can verify it came from ``card.agent_id``, was not
+        altered in transit, and carries the version/tombstone the publisher
+        actually wrote — not one a relay forged on the wire.
 
         Example::
 
@@ -187,7 +207,7 @@ class ByzantineGossipRegistry:
             version=self._network.next_version(card.agent_id),
             publisher_id=card.agent_id,
         )
-        signed_card = _sign_card(card, self._identity)
+        signed_card = _sign_card(card, tag.version, tombstone=False, identity=self._identity)
         self._apply(signed_card, tag, tombstone=False)
 
     async def lookup(self, query: Query) -> list[AgentCard]:
@@ -213,6 +233,12 @@ class ByzantineGossipRegistry:
     async def deregister(self, agent: AgentId) -> None:
         """Tombstone ``agent`` locally; gossip propagates the tombstone.
 
+        Allocates the new (tombstoning) version and re-signs
+        ``canonical_write_bytes(existing_card, version, tombstone=True)`` so
+        the deletion itself is authenticated — a relay cannot flip
+        ``tombstone`` back to ``False`` on the wire and "un-delete" the
+        agent, since that would no longer match the signed write.
+
         Example::
 
             await reg.deregister(AgentId("a"))
@@ -224,7 +250,10 @@ class ByzantineGossipRegistry:
             version=self._network.next_version(agent),
             publisher_id=agent,
         )
-        self._apply(existing.card, tag, tombstone=True)
+        signed_card = _sign_card(
+            existing.card, tag.version, tombstone=True, identity=self._identity
+        )
+        self._apply(signed_card, tag, tombstone=True)
 
     # ------------------------------------------------------------------
     # Gossip mechanics
@@ -255,12 +284,16 @@ class ByzantineGossipRegistry:
         """Process a gossip message from ``sender``.
 
         Returns ``True`` if the payload was a gossip message (and was
-        consumed), ``False`` otherwise.  ``OP_PUSH`` cards are verified
-        before merge: unsigned, impersonating, or forged/mutated cards are
-        dropped and recorded in ``self.rejections`` instead of being
-        applied.  Equivocation detection (two differently-signed cards from
-        the same publisher at the same version — both individually valid)
-        is not caught here; see Task 3.
+        consumed), ``False`` otherwise.  ``OP_PUSH`` entries are verified
+        before merge against ``canonical_write_bytes(card, tag.version,
+        tombstone)`` — binding the signature to the wire-supplied version
+        and tombstone bit, not just the card content — so unsigned,
+        impersonating, forged/mutated, replayed-with-a-forged-version, or
+        tombstone-flipped entries are all dropped and recorded in
+        ``self.rejections`` instead of being applied.  Equivocation
+        detection (two differently-signed cards from the same publisher at
+        the same version — both individually valid) is not caught here; see
+        Task 3.
 
         Example::
 
@@ -281,7 +314,7 @@ class ByzantineGossipRegistry:
             return True
         if op == OP_PUSH:
             for card, tag, tombstone in _decode_push(rest):
-                reason = _verify_card(card, self._identity)
+                reason = _verify_card(card, tag.version, tombstone, self._identity)
                 if reason is not None:
                     self.rejections.append((card.agent_id, reason))
                     continue
@@ -338,7 +371,7 @@ class ByzantineGossipRegistry:
 
 
 def canonical_card_bytes(card: AgentCard) -> bytes:
-    """Canonical content bytes of ``card`` for signing/verification.
+    """Canonical content-only bytes of ``card`` for content comparisons.
 
     Covers ``agent_id``, ``name``, ``capabilities`` (sorted so declaration
     order is not semantically meaningful), and ``endpoint``. Deliberately
@@ -349,9 +382,14 @@ def canonical_card_bytes(card: AgentCard) -> bytes:
     ``metadata``. Structural analogue of ``cid_facts.content_hash``, which
     canonicalizes a ``DatasetMetadata``'s content fields the same way.
 
+    **Not** what gets signed — signing binds the full write, including
+    ``version``/``tombstone``; see ``canonical_write_bytes``. This helper
+    remains for content-only comparisons (e.g. detecting whether two cards
+    have identical content regardless of write metadata).
+
     Example::
 
-        sig = identity.sign(canonical_card_bytes(card))
+        same_content = canonical_card_bytes(card1) == canonical_card_bytes(card2)
     """
     content: dict[str, object] = {
         "agent_id": str(card.agent_id),
@@ -362,8 +400,41 @@ def canonical_card_bytes(card: AgentCard) -> bytes:
     return json.dumps(content, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
 
-def _sign_card(card: AgentCard, identity: Identity) -> AgentCard:
+def canonical_write_bytes(card: AgentCard, version: int, tombstone: bool) -> bytes:
+    """Canonical bytes of a **write** — ``card`` content plus ``version`` and ``tombstone``.
+
+    This is what gets signed and verified, not ``canonical_card_bytes``
+    alone. Binding the signature to the write tag and tombstone bit (in
+    addition to content) closes a replay hole: without it, a relay holding
+    no private key can take a genuinely-signed card and re-broadcast it
+    under a forged, inflated ``version`` (winning last-writer-wins against
+    the publisher's real future writes) or with a flipped ``tombstone`` bit
+    (resurrecting a deregistered agent, or deleting a live one) — the card's
+    *content* signature still checks out because content-only signing never
+    covered the tag or tombstone in the first place. Still excludes
+    ``metadata`` for the same circularity reason as ``canonical_card_bytes``.
+
+    Example::
+
+        sig = identity.sign(canonical_write_bytes(card, version=3, tombstone=False))
+    """
+    content: dict[str, object] = {
+        "agent_id": str(card.agent_id),
+        "name": card.name,
+        "capabilities": sorted(card.capabilities),
+        "endpoint": card.endpoint,
+        "version": version,
+        "tombstone": tombstone,
+    }
+    return json.dumps(content, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def _sign_card(card: AgentCard, version: int, tombstone: bool, *, identity: Identity) -> AgentCard:
     """Return a copy of ``card`` with a fresh ``metadata["sig"]`` from ``identity``.
+
+    Signs ``canonical_write_bytes(card, version, tombstone)`` — the whole
+    write, not just the content — so a relay cannot replay this card under a
+    different version or tombstone state and still pass verification.
 
     The signature ``value`` is stored hex-encoded (not raw ``bytes``):
     ``AgentCard.metadata`` is a plain ``dict[str, Any]``, and round-tripping
@@ -372,7 +443,7 @@ def _sign_card(card: AgentCard, identity: Identity) -> AgentCard:
     no field-type hint telling it to treat that value as bytes on the way
     back in). Hex keeps the wire payload plain JSON end to end.
     """
-    sig = identity.sign(canonical_card_bytes(card))
+    sig = identity.sign(canonical_write_bytes(card, version, tombstone))
     metadata = dict(card.metadata)
     metadata["sig"] = {
         "signer": str(sig.signer),
@@ -382,14 +453,18 @@ def _sign_card(card: AgentCard, identity: Identity) -> AgentCard:
     return card.model_copy(update={"metadata": metadata})
 
 
-def _verify_card(card: AgentCard, identity: Identity) -> str | None:
-    """Verify ``card``'s embedded signature; return a rejection reason or ``None``.
+def _verify_card(card: AgentCard, version: int, tombstone: bool, identity: Identity) -> str | None:
+    """Verify ``card``'s embedded signature against ``(version, tombstone)``.
+
+    Returns a rejection reason, or ``None`` if the signature is valid.
 
     Reason codes mirror ``#67``'s taxonomy: ``REASON_MISSING_SIGNATURE`` (no
     ``metadata["sig"]``), ``REASON_SIGNER_MISMATCH`` (``sig.signer`` names a
     different agent than ``card.agent_id`` — impersonation), or
     ``REASON_BAD_SIGNATURE`` (present, correctly-claimed signer, but fails
-    cryptographic verification — forgery or in-transit mutation).
+    cryptographic verification — forgery, in-transit mutation, or a replay
+    under a forged ``version``/``tombstone`` that the publisher never
+    actually signed).
     """
     raw_sig_meta = card.metadata.get("sig")
     if not isinstance(raw_sig_meta, dict):
@@ -408,7 +483,7 @@ def _verify_card(card: AgentCard, identity: Identity) -> str | None:
         return REASON_BAD_SIGNATURE
     algorithm = str(sig_meta.get("algorithm", "ed25519"))
     sig = Signature(signer=signer, value=value, algorithm=algorithm)
-    if not identity.verify(canonical_card_bytes(card), sig, card.agent_id):
+    if not identity.verify(canonical_write_bytes(card, version, tombstone), sig, card.agent_id):
         return REASON_BAD_SIGNATURE
     return None
 
