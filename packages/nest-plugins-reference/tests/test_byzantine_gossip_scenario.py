@@ -134,7 +134,7 @@ async def _equivocation_views(
         reg = registries[aid]
         snapshot = reg.view_snapshot()
         cards_by_id = {c.agent_id: c for c in await reg.lookup(Query())}
-        per_viewer: dict[AgentId, tuple[int, bool, str]] = {}
+        per_viewer: dict[AgentId, tuple[int, bool, str | None]] = {}
         for publisher_id, (version, _writer, tombstone) in snapshot.items():
             card = cards_by_id.get(publisher_id)
             if card is None:
@@ -349,6 +349,47 @@ class TestEclipseScenario:
         plugins = await _run("gossip_eclipse.yaml", "gossip", trace, seed)
         verdicts = await _validator_verdicts(plugins)
         assert verdicts["eclipse"] is False
+
+    @pytest.mark.asyncio
+    async def test_seed_bank_robustness_gossip_always_eclipsed(self, tmp_path: Path) -> None:
+        """`gossip` must FAIL `check_no_eclipse` across the full seed bank, not just {42, 7, 1337}.
+
+        A prior tuning of this scenario (`n_byz=24`, `fanout=2`) only checked
+        the three seeds committed as the CI gate above and happened to leave
+        2 of 28 seeds in the broader bank (8, 21) where an unlucky/lucky
+        independent double-draw let `gossip`'s two honest agents converge
+        anyway -- `check_no_eclipse` PASSed there too, so it failed to
+        distinguish `gossip` from `byzantine_gossip` on those seeds. This
+        test locks in the fix (`n_byz=40`, `fanout=1`, see
+        `scenarios/gossip_eclipse.yaml`'s header comment for the sweep that
+        produced these parameters): every seed in `range(25)` plus
+        `42, 7, 1337` must FAIL for `gossip` while `byzantine_gossip` PASSes
+        the full validator triple on every one of the same seeds.
+        """
+        seed_bank = [*range(25), 42, 7, 1337]
+        gossip_pass_seeds: list[int] = []
+        byzantine_fail_seeds: list[int] = []
+        for seed in seed_bank:
+            ref_trace = tmp_path / f"eclipse_seedbank_ref_{seed}.jsonl"
+            ref_plugins = await _run("gossip_eclipse.yaml", "gossip", ref_trace, seed)
+            ref_verdicts = await _validator_verdicts(ref_plugins)
+            if ref_verdicts["eclipse"] is not False:
+                gossip_pass_seeds.append(seed)
+
+            byz_trace = tmp_path / f"eclipse_seedbank_byz_{seed}.jsonl"
+            byz_plugins = await _run("gossip_eclipse.yaml", "byzantine_gossip", byz_trace, seed)
+            byz_verdicts = await _validator_verdicts(byz_plugins)
+            if byz_verdicts != {"forged": True, "equivocation": True, "eclipse": True}:
+                byzantine_fail_seeds.append(seed)
+
+        assert not gossip_pass_seeds, (
+            f"expected `gossip` to FAIL check_no_eclipse on every seed in the bank; "
+            f"it PASSed (converged, not eclipsed) on: {gossip_pass_seeds}"
+        )
+        assert not byzantine_fail_seeds, (
+            f"expected `byzantine_gossip` to PASS all three validators on every seed "
+            f"in the bank; it did not on: {byzantine_fail_seeds}"
+        )
 
 
 # ---------------------------------------------------------------------------

@@ -93,7 +93,7 @@ seeds 42, 7, 1337:
 - `gossip_signed_equivocation.yaml` -- **the novelty proof**: one publisher
   genuinely signs two conflicting cards at the same version and delivers
   them to two honest groups in opposite order.
-- `gossip_eclipse.yaml` -- 2 honest agents drowned in 24 inert byzantine
+- `gossip_eclipse.yaml` -- 2 honest agents drowned in 40 inert byzantine
   "black hole" peers.
 
 ```bash
