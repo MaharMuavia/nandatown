@@ -78,7 +78,7 @@ if TYPE_CHECKING:
     from nest_core.layers.identity import Identity
     from nest_core.types import AgentCard, AgentId
 
-EquivocationView = dict["AgentId", dict["AgentId", tuple[int, bool, str]]]
+EquivocationView = dict["AgentId", dict["AgentId", tuple[int, bool, "str | None"]]]
 """Per-viewer view extended with a content fingerprint: ``{published_agent_id:
 (version, tombstone, content_hash)}``.
 
@@ -94,6 +94,16 @@ tombstone)).hexdigest()`` -- the same hash
 from ``reg.lookup()`` for a live registry (tombstoned entries are not
 returned by ``lookup()``, a known gap noted on
 ``check_no_equivocation_accepted``) or built by hand in tests.
+
+``content_hash`` may be ``None`` when the caller knows an entry existed at
+that ``(publisher, version)`` key (e.g. a tombstone recorded outside
+``lookup()``) but could not recover its content to hash it. That is
+distinct from omitting the ``(publisher, version)`` key entirely (which
+means this viewer simply has no information about it at all, the normal
+and harmless state of a partial gossip view): a present-but-``None`` entry
+is evidence that *something* happened here whose content is unverifiable,
+and ``check_no_equivocation_accepted`` treats it accordingly -- it can
+never be silently folded into "no disagreement".
 
 Example::
 
@@ -240,6 +250,19 @@ def check_no_equivocation_accepted(
     specific disagreeing viewers to be the ones who detected it, only that
     *someone* honest did.
 
+    Symmetric to ``check_no_forged_card_in_view``: "cannot verify" is never
+    a pass. Any view entry whose ``content_hash`` is ``None`` (an entry the
+    caller knows existed at that key but could not hash -- see
+    ``EquivocationView``) means the validator cannot actually confirm
+    whether that key disagreed with the rest of the network or not. A
+    naive comparison would fold a lone unresolvable entry into "only one
+    hash seen, no disagreement" and pass -- exactly the fake green a real,
+    one-sided split produces when the conflicting write was evicted or
+    tombstoned on one side and no ledger recorded it. Any such key not
+    already covered by a recorded equivocation therefore FAILs the report,
+    named under ``evidence["unverifiable_equivocations"]``, regardless of
+    whether a concrete second hash was ever observed.
+
     Against the reference ``gossip``/``in_memory`` plugins this always
     FAILs when an equivocation actually happens: neither has an
     equivocation ledger at all, so a real content split across nodes --
@@ -263,9 +286,14 @@ def check_no_equivocation_accepted(
         assert report.passed, report.detail
     """
     disagreements: dict[tuple[str, int], set[str]] = defaultdict(set)
+    unverifiable_keys: set[tuple[str, int]] = set()
     for snapshot in views.values():
         for publisher_id, (version, _tombstone, content_hash) in snapshot.items():
-            disagreements[(str(publisher_id), version)].add(content_hash)
+            key = (str(publisher_id), version)
+            if content_hash is None:
+                unverifiable_keys.add(key)
+                continue
+            disagreements[key].add(content_hash)
 
     recorded: set[tuple[str, int]] = {
         (str(publisher_id), version)
@@ -276,14 +304,27 @@ def check_no_equivocation_accepted(
     undetected = sorted(
         key for key, hashes in disagreements.items() if len(hashes) > 1 and key not in recorded
     )
-    if undetected:
-        return ValidatorReport(
-            passed=False,
-            detail=(
+    unverifiable = sorted(key for key in unverifiable_keys if key not in recorded)
+    if undetected or unverifiable:
+        details: list[str] = []
+        if undetected:
+            details.append(
                 f"{len(undetected)} (publisher, version) key(s) show honest views silently "
                 "disagreeing on content with no equivocation recorded"
-            ),
-            evidence={"undetected_equivocations": undetected},
+            )
+        if unverifiable:
+            details.append(
+                f"{len(unverifiable)} (publisher, version) key(s) hold an entry whose content "
+                "could not be verified (hash unavailable) and no equivocation was recorded for "
+                "it -- absence of evidence is not evidence of safety, so it is not passed"
+            )
+        return ValidatorReport(
+            passed=False,
+            detail="; ".join(details),
+            evidence={
+                "undetected_equivocations": undetected,
+                "unverifiable_equivocations": unverifiable,
+            },
         )
     return ValidatorReport(
         passed=True,

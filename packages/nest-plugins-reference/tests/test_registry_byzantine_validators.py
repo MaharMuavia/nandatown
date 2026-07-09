@@ -17,6 +17,7 @@ from nest_core.types import AgentCard, AgentId
 from nest_plugins_reference.identity.did_key import DidKeyIdentity
 from nest_plugins_reference.registry.byzantine_gossip import canonical_write_bytes
 from nest_plugins_reference.validators.registry_byzantine_validators import (
+    EquivocationView,
     check_no_eclipse,
     check_no_equivocation_accepted,
     check_no_forged_card_in_view,
@@ -136,7 +137,7 @@ def test_equivocation_validator_fails_against_reference_style_silent_split() -> 
     split across honest nodes goes completely unrecorded.
     """
     ledgers: dict[AgentId, list[tuple[AgentId, int]]] = {AgentId("a"): [], AgentId("c"): []}
-    views = {
+    views: EquivocationView = {
         AgentId("a"): {AgentId("e"): (1, False, "hash-of-card-1")},
         AgentId("c"): {AgentId("e"): (1, False, "hash-of-card-2")},
     }
@@ -162,7 +163,7 @@ def test_equivocation_validator_passes_against_byzantine_style_quarantine() -> N
         AgentId("b"): [(AgentId("e"), 1)],
         AgentId("c"): [],
     }
-    views = {
+    views: EquivocationView = {
         AgentId("a"): {AgentId("e"): (1, False, "hash-of-card-1")},
         AgentId("b"): {},  # evicted on quarantine
         AgentId("c"): {AgentId("e"): (1, False, "hash-of-card-2")},
@@ -173,10 +174,41 @@ def test_equivocation_validator_passes_against_byzantine_style_quarantine() -> N
     assert report.passed, report.detail
 
 
+def test_equivocation_validator_fails_on_masked_one_sided_split() -> None:
+    """Incomplete evidence must never read as a pass.
+
+    A real one-sided split: ``b`` witnessed a write for ``(e, 1)`` and then
+    evicted/tombstoned it (``a`` never received a copy at all -- its
+    conflicting side of the split is gone with no trace), so the only
+    surviving entry anywhere is ``b``'s tombstone whose content hash could
+    not be recovered (the known ``lookup()`` limitation this module's
+    docstring already calls out -- ``content_hash=None`` signals "an entry
+    existed here but its content is unverifiable", as distinct from no
+    entry at all). No ledger recorded anything. The old logic only ever
+    compared *known* hash strings against each other: with a single
+    ``None`` in the set there is nothing to disagree with, so it declared
+    "no disagreement" and returned PASS -- a fake green, since that lone
+    unresolvable entry might be exactly the undetected half of a real
+    equivocation. Incomplete evidence must FAIL, naming the key it could
+    not resolve.
+    """
+    ledgers: dict[AgentId, list[tuple[AgentId, int]]] = {AgentId("a"): [], AgentId("b"): []}
+    views: EquivocationView = {
+        AgentId("a"): {},  # the conflicting side: evicted, no trace left anywhere
+        AgentId("b"): {AgentId("e"): (1, True, None)},  # tombstoned, hash unrecoverable
+    }
+
+    report = check_no_equivocation_accepted(equivocation_ledgers=ledgers, views=views)
+
+    assert not report.passed
+    unverifiable = cast("list[tuple[str, int]]", report.evidence["unverifiable_equivocations"])
+    assert ("e", 1) in unverifiable
+
+
 def test_equivocation_validator_passes_when_no_disagreement_exists() -> None:
     """No-false-positive: honest multi-write history at distinct versions is not equivocation."""
     ledgers: dict[AgentId, list[tuple[AgentId, int]]] = {AgentId("a"): [], AgentId("b"): []}
-    views = {
+    views: EquivocationView = {
         AgentId("a"): {AgentId("e"): (2, False, "hash-of-card-2")},
         AgentId("b"): {AgentId("e"): (2, False, "hash-of-card-2")},
     }
