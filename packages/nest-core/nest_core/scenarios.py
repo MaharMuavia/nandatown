@@ -77,6 +77,12 @@ def _try_load_builtin(name: str) -> None:
         )
 
         register_scenario("identity_rotation", identity_rotation_factory)
+    elif name == "attested_peering":
+        from nest_core.scenarios_builtin.attested_peering import (
+            attested_peering_factory,
+        )
+
+        register_scenario("attested_peering", attested_peering_factory)
     elif name == "gossip_registry":
         from nest_core.scenarios_builtin.gossip_registry import gossip_registry_factory
 
